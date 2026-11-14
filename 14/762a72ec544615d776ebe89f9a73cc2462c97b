@@ -1,0 +1,88 @@
+backend/cmd/api/main.go
+  h_42175f19913982 1-139
+backend/cmd/simulador/main.go
+  h_42175f19913982 1-96
+backend/go.mod
+  h_42175f19913982 1-39
+backend/go.sum
+  h_42175f19913982 1-84
+backend/internal/auth/handler.go
+  h_42175f19913982 1-69
+backend/internal/auth/model.go
+  h_42175f19913982 1-36
+backend/internal/auth/repository.go
+  h_42175f19913982 1-66
+backend/internal/auth/service.go
+  h_42175f19913982 1-91
+backend/internal/db/db.go
+  h_42175f19913982 1-35
+backend/internal/db/migrate.go
+  h_42175f19913982 1-97
+backend/internal/db/migrations/000001_init_schema.down.sql
+  h_42175f19913982 1-8
+backend/internal/db/migrations/000001_init_schema.up.sql
+  h_42175f19913982 1-83
+backend/internal/draw/engine.go
+  h_42175f19913982 1-259
+backend/internal/draw/engine_test.go
+  h_42175f19913982 1-192
+backend/internal/draw/handler.go
+  h_42175f19913982 1-85
+backend/internal/draw/model.go
+  h_42175f19913982 1-33
+backend/internal/draw/repository.go
+  h_42175f19913982 1-174
+backend/internal/draw/service.go
+  h_42175f19913982 1-111
+backend/internal/edition/handler.go
+  h_42175f19913982 1-40
+backend/internal/edition/model.go
+  h_42175f19913982 1-20
+backend/internal/edition/repository.go
+  h_42175f19913982 1-52
+backend/internal/edition/service.go
+  h_42175f19913982 1-32
+backend/internal/incompatibility/handler.go
+  h_42175f19913982 1-68
+backend/internal/incompatibility/model.go
+  h_42175f19913982 1-33
+backend/internal/incompatibility/repository.go
+  h_42175f19913982 1-116
+backend/internal/incompatibility/service.go
+  h_42175f19913982 1-88
+backend/internal/member/handler.go
+  h_42175f19913982 1-61
+backend/internal/member/model.go
+  h_42175f19913982 1-27
+backend/internal/member/repository.go
+  h_42175f19913982 1-94
+backend/internal/member/service.go
+  h_42175f19913982 1-88
+backend/internal/shared/jwt.go
+  h_42175f19913982 1-67
+backend/internal/shared/middleware.go
+  h_42175f19913982 1-75
+backend/internal/shared/response.go
+  h_42175f19913982 1-31
+backend/internal/upload/handler.go
+  h_42175f19913982 1-50
+backend/internal/wishlist/handler.go
+  h_42175f19913982 1-111
+backend/internal/wishlist/model.go
+  h_42175f19913982 1-25
+backend/internal/wishlist/repository.go
+  h_42175f19913982 1-81
+backend/internal/wishlist/service.go
+  h_42175f19913982 1-55
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "14762a72ec544615d776ebe89f9a73cc2462c97b",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
