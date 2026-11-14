@@ -1,0 +1,14 @@
+CHANGELOG.md
+  h_42175f19913982 8,11-31
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "d4cd8f31104dff052d6bb46ff20a2c2a5e67d774",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
