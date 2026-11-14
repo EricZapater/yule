@@ -19,12 +19,17 @@ var (
 	ErrTokenInvalid = errors.New("enllaç màgic invàlid o caducat")
 )
 
-type Service struct {
-	repo *Repository
+type Mailer interface {
+	SendMagicLink(toEmail, toName, magicLinkURL string) error
 }
 
-func NewService(repo *Repository) *Service {
-	return &Service{repo: repo}
+type Service struct {
+	repo   *Repository
+	mailer Mailer
+}
+
+func NewService(repo *Repository, mailer Mailer) *Service {
+	return &Service{repo: repo, mailer: mailer}
 }
 
 // RequestMagicLink genera un token d'un sol ús i simula/envia el correu.
@@ -89,6 +94,14 @@ func (s *Service) RequestMagicLink(rawEmail string) (string, error) {
 
 	magicURL := fmt.Sprintf("%s/login?token=%s", baseURL, token)
 	log.Printf("📧 [CORREU YULE] Enllaç màgic per a %s (%s): %s", user.Name, user.Email, magicURL)
+
+	if s.mailer != nil {
+		if err := s.mailer.SendMagicLink(user.Email, user.Name, magicURL); err != nil {
+			log.Printf("⚠️ Error enviant correu SMTP a %s: %v", user.Email, err)
+		} else {
+			log.Printf("✉️ Correu enviat amb èxit per SMTP a %s", user.Email)
+		}
+	}
 
 	return token, nil
 }

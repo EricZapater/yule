@@ -12,6 +12,7 @@ import (
 	"yule/backend/internal/draw"
 	"yule/backend/internal/edition"
 	"yule/backend/internal/incompatibility"
+	"yule/backend/internal/mailer"
 	"yule/backend/internal/member"
 	"yule/backend/internal/shared"
 	"yule/backend/internal/upload"
@@ -43,10 +44,11 @@ func main() {
 	}
 
 	// Instanciació de serveis i repositoris
+	appMailer := mailer.NewMailerFromEnv()
 	drawEngine := draw.NewEngine()
 
 	authRepo := auth.NewRepository(conn)
-	authService := auth.NewService(authRepo)
+	authService := auth.NewService(authRepo, appMailer)
 	authHandler := auth.NewHandler(authService)
 
 	editionRepo := edition.NewRepository(conn)
