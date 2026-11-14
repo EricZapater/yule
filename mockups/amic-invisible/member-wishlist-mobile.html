@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yule — La meva Llista de Desitjos (Mòbil)</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pine-900: #0d1e17;
+      --pine-800: #143226;
+      --pine-700: #1b4332;
+      --pine-600: #2d6a4f;
+      --gold-500: #d4af37;
+      --gold-400: #e8c868;
+      --gold-100: #fbf6e2;
+      --berry-700: #780016;
+      --berry-600: #9d0208;
+      --snow-bg: #f7f4ee;
+      --card-bg: #ffffff;
+      --text-main: #1f2d26;
+      --text-muted: #5e6d65;
+      --border-warm: #e5ded0;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #1a2e25;
+      background-image: radial-gradient(circle at 50% 10%, #244236 0%, #10211a 100%);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    .mobile-frame {
+      width: 100%;
+      max-width: 414px;
+      background: var(--snow-bg);
+      border-radius: 36px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1e382d;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .status-bar {
+      height: 44px;
+      padding: 12px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gold-100);
+      background: var(--pine-800);
+    }
+
+    .yule-header {
+      background: linear-gradient(180deg, var(--pine-800) 0%, var(--pine-700) 100%);
+      color: white;
+      padding: 18px 20px 22px;
+      text-align: center;
+      border-bottom: 2px solid var(--gold-500);
+    }
+    .yule-title {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .yule-sub {
+      font-size: 13px;
+      color: #b7cbbf;
+      margin-top: 4px;
+    }
+
+    .scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 18px 90px;
+    }
+
+    /* Avis de pressupost familiar */
+    .budget-banner {
+      background: var(--gold-100);
+      border: 1px solid var(--gold-500);
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 20px;
+      font-size: 13px;
+      color: #644900;
+    }
+    .budget-banner strong {
+      color: #3b2a00;
+    }
+
+    /* Formulari d'afegir desig */
+    .add-form-card {
+      background: #ffffff;
+      border-radius: 20px;
+      border: 1px solid var(--border-warm);
+      padding: 18px;
+      margin-bottom: 24px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.04);
+    }
+    .form-title {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--pine-800);
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .field-group {
+      margin-bottom: 14px;
+    }
+    .field-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--pine-900);
+      margin-bottom: 6px;
+    }
+    .field-input, .field-textarea {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-warm);
+      border-radius: 10px;
+      font-size: 15px;
+      font-family: inherit;
+      background: #faf8f5;
+    }
+    .field-input:focus, .field-textarea:focus {
+      outline: none;
+      border-color: var(--pine-600);
+      background: #fff;
+    }
+
+    /* Botó Càmera Mòbil / Puja foto */
+    .camera-upload-box {
+      border: 2px dashed #c5baa8;
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+      background: #fdfbf8;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+      margin-bottom: 14px;
+    }
+    .camera-icon {
+      font-size: 28px;
+    }
+    .camera-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--pine-700);
+    }
+    .camera-hint {
+      font-size: 11px;
+      color: var(--text-muted);
+    }
+
+    /* Estat de foto ja adjuntada */
+    .photo-preview-bar {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: #f4efe6;
+      padding: 8px 12px;
+      border-radius: 10px;
+      margin-bottom: 14px;
+      border: 1px solid #dfd5c4;
+    }
+    .preview-thumb {
+      width: 48px;
+      height: 48px;
+      border-radius: 6px;
+      object-fit: cover;
+    }
+    .preview-info {
+      flex: 1;
+      font-size: 12px;
+      color: var(--pine-900);
+      font-weight: 600;
+    }
+    .btn-remove-photo {
+      background: none;
+      border: none;
+      color: var(--berry-600);
+      font-size: 16px;
+      cursor: pointer;
+    }
+
+    /* Botó principal Afegir */
+    .btn-submit-wish {
+      width: 100%;
+      background: var(--berry-600);
+      color: #fff;
+      border: none;
+      padding: 14px;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(157, 2, 8, 0.25);
+    }
+
+    /* Llistat dels desitjos ja afegits */
+    .saved-list-header {
+      font-family: 'Cinzel', serif;
+      font-size: 17px;
+      color: var(--pine-800);
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+    .saved-card {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid var(--border-warm);
+      padding: 14px;
+      margin-bottom: 12px;
+      display: flex;
+      gap: 12px;
+      align-items: center;
+    }
+    .saved-thumb {
+      width: 56px;
+      height: 56px;
+      border-radius: 8px;
+      background: #ece7dc;
+      object-fit: cover;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 22px;
+    }
+    .saved-details {
+      flex: 1;
+    }
+    .saved-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--pine-900);
+    }
+    .saved-meta {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    .btn-delete-item {
+      background: none;
+      border: none;
+      color: #aa9c8d;
+      font-size: 18px;
+      padding: 8px;
+      cursor: pointer;
+    }
+
+    /* Barra de navegació */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: #fff;
+      border-top: 1px solid var(--border-warm);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 12px;
+      z-index: 10;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .nav-item.active {
+      color: var(--berry-600);
+    }
+    .nav-icon {
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>09:42</span>
+      <span>📶 5G 🔋</span>
+    </div>
+
+    <!-- Capçalera Yule -->
+    <header class="yule-header">
+      <h1 class="yule-title">ELS MEUS DESITJOS</h1>
+      <p class="yule-sub">Posa idees perquè el teu amic invisible encerti!</p>
+    </header>
+
+    <!-- Contingut principal -->
+    <main class="scroll-content">
+      <!-- Indicador de pressupost màxim -->
+      <div class="budget-banner">
+        <span>✨</span>
+        <div>Pressupost màxim acordat: <strong>30 €</strong> (orientatiu)</div>
+      </div>
+
+      <!-- Formulari ràpid per afegir un desig -->
+      <section class="add-form-card">
+        <h2 class="form-title"><span>➕</span> Afegir una idea de regal</h2>
+
+        <div class="field-group">
+          <label class="field-label">Què t'agradaria? *</label>
+          <input type="text" class="field-input" placeholder="Ex: Jersei de coll alt, un llibre...">
+        </div>
+
+        <!-- Botó de captura de foto (Càmera directa de mòbil o PC) -->
+        <label class="field-label">Tens foto del que t'agrada? (Opcional)</label>
+        <div class="camera-upload-box">
+          <span class="camera-icon">📸</span>
+          <span class="camera-title">Fes una foto o tria de la galeria</span>
+          <span class="camera-hint">Ideal per coses que veus a les botigues o catàlegs</span>
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Enllaç web a la botiga (Opcional)</label>
+          <input type="url" class="field-input" placeholder="https://...">
+        </div>
+
+        <div class="field-group">
+          <label class="field-label">Comentaris o detalls (Opcional)</label>
+          <textarea class="field-textarea" rows="2" placeholder="Talla M, color blau fosc, edició en català..."></textarea>
+        </div>
+
+        <button type="button" class="btn-submit-wish">Afegir a la meva llista 🎁</button>
+      </section>
+
+      <!-- Llista de desitjos actualment desats -->
+      <h3 class="saved-list-header">Idees afegides per tu (2)</h3>
+
+      <div class="saved-card">
+        <img class="saved-thumb" src="https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=150&q=80" alt="Bufanda">
+        <div class="saved-details">
+          <div class="saved-title">Bufanda de llana verda</div>
+          <div class="saved-meta">Aprox. 24,90 € • 📷 Foto adjunta</div>
+        </div>
+        <button class="btn-delete-item" title="Eliminar">🗑️</button>
+      </div>
+
+      <div class="saved-card">
+        <div class="saved-thumb">📚</div>
+        <div class="saved-details">
+          <div class="saved-title">Llibre "Mirall Trencat"</div>
+          <div class="saved-meta">18,50 € • Amb enllaç web</div>
+        </div>
+        <button class="btn-delete-item" title="Eliminar">🗑️</button>
+      </div>
+    </main>
+
+    <!-- Barra de navegació -->
+    <nav class="bottom-nav">
+      <a href="member-gift-assigned-mobile.html" class="nav-item">
+        <span class="nav-icon">🎁</span>
+        <span>A qui regalo</span>
+      </a>
+      <a href="member-wishlist-mobile.html" class="nav-item active">
+        <span class="nav-icon">⭐</span>
+        <span>Els meus desitjos</span>
+      </a>
+      <a href="admin-dashboard-mobile.html" class="nav-item">
+        <span class="nav-icon">⚙️</span>
+        <span>Admin</span>
+      </a>
+    </nav>
+  </div>
+
+</body>
+</html>

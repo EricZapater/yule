@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yule — Tauler d'Administrador (Mòbil)</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pine-900: #0d1e17;
+      --pine-800: #143226;
+      --pine-700: #1b4332;
+      --pine-600: #2d6a4f;
+      --gold-500: #d4af37;
+      --gold-400: #e8c868;
+      --gold-100: #fbf6e2;
+      --berry-700: #780016;
+      --berry-600: #9d0208;
+      --snow-bg: #f7f4ee;
+      --card-bg: #ffffff;
+      --text-main: #1f2d26;
+      --text-muted: #5e6d65;
+      --border-warm: #e5ded0;
+      --success-green: #2d6a4f;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: #1a2e25;
+      background-image: radial-gradient(circle at 50% 10%, #244236 0%, #10211a 100%);
+      color: var(--text-main);
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+      min-height: 100vh;
+    }
+
+    .mobile-frame {
+      width: 100%;
+      max-width: 414px;
+      background: var(--snow-bg);
+      border-radius: 36px;
+      box-shadow: 0 25px 60px rgba(0, 0, 0, 0.45), 0 0 0 10px #1e382d;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .status-bar {
+      height: 44px;
+      padding: 12px 24px 0;
+      display: flex;
+      justify-content: space-between;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--gold-100);
+      background: var(--pine-800);
+    }
+
+    .yule-header {
+      background: linear-gradient(180deg, var(--pine-800) 0%, var(--pine-700) 100%);
+      color: white;
+      padding: 18px 20px 22px;
+      border-bottom: 2px solid var(--gold-500);
+    }
+    .header-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .yule-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+    }
+    .admin-badge {
+      background: rgba(212, 175, 55, 0.25);
+      border: 1px solid var(--gold-500);
+      color: var(--gold-400);
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 12px;
+      text-transform: uppercase;
+    }
+
+    .scroll-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px 18px 90px;
+    }
+
+    /* Targeta d'estat de l'edició */
+    .edition-card {
+      background: #ffffff;
+      border: 1px solid var(--border-warm);
+      border-radius: 18px;
+      padding: 16px;
+      margin-bottom: 18px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.03);
+    }
+    .edition-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+    .edition-name {
+      font-family: 'Cinzel', serif;
+      font-size: 18px;
+      color: var(--pine-900);
+      font-weight: 700;
+    }
+    .edition-status {
+      font-size: 12px;
+      font-weight: 700;
+      background: #e1f0e5;
+      color: var(--success-green);
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    .edition-metrics {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+    .metric-box {
+      background: #fbf9f5;
+      padding: 10px 12px;
+      border-radius: 10px;
+      border: 1px solid #ede7db;
+    }
+    .metric-val {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--pine-800);
+    }
+    .metric-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    /* Enllaç a Incompatibilitats */
+    .incomp-nav-banner {
+      background: #fdf6ec;
+      border: 1px solid #e9c46a;
+      border-radius: 14px;
+      padding: 12px 14px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 20px;
+      text-decoration: none;
+      color: #7a5300;
+      font-size: 13px;
+      font-weight: 600;
+    }
+    .incomp-nav-banner:active {
+      background: #f9edd9;
+    }
+
+    /* Secció Participants */
+    .family-section-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    .section-title {
+      font-family: 'Cinzel', serif;
+      font-size: 16px;
+      color: var(--pine-800);
+      font-weight: 700;
+    }
+    .btn-add-member {
+      background: var(--pine-700);
+      color: #fff;
+      border: none;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    /* Targetes de familiars */
+    .member-item {
+      background: #fff;
+      border-radius: 14px;
+      border: 1px solid var(--border-warm);
+      padding: 12px 14px;
+      margin-bottom: 10px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .member-info {
+      flex: 1;
+    }
+    .member-name {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--pine-900);
+    }
+    .member-email {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 1px;
+    }
+    .member-wishlist-status {
+      display: inline-block;
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 4px;
+      padding: 2px 6px;
+      border-radius: 6px;
+    }
+    .status-ok { background: #eaf5ee; color: var(--success-green); }
+    .status-pending { background: #fff5e6; color: #a16207; }
+
+    .btn-whatsapp-copy {
+      background: #e7f7ed;
+      border: 1px solid #a3e0b7;
+      color: #12753a;
+      font-size: 12px;
+      font-weight: 600;
+      padding: 6px 10px;
+      border-radius: 8px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Botó del Sorteig */
+    .draw-section {
+      margin-top: 24px;
+      text-align: center;
+    }
+    .btn-trigger-draw {
+      width: 100%;
+      background: linear-gradient(135deg, var(--berry-600) 0%, #bd121c 100%);
+      color: #fff;
+      border: 2px solid var(--gold-400);
+      padding: 16px;
+      border-radius: 16px;
+      font-size: 17px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      box-shadow: 0 6px 20px rgba(157, 2, 8, 0.35);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 8px;
+    }
+    .draw-hint {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+
+    /* Barra inferior */
+    .bottom-nav {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 72px;
+      background: #fff;
+      border-top: 1px solid var(--border-warm);
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      padding-bottom: 12px;
+      z-index: 10;
+    }
+    .nav-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-decoration: none;
+    }
+    .nav-item.active {
+      color: var(--berry-600);
+    }
+    .nav-icon {
+      font-size: 20px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="mobile-frame">
+    <!-- Status Bar -->
+    <div class="status-bar">
+      <span>09:43</span>
+      <span>📶 5G 🔋</span>
+    </div>
+
+    <!-- Header Admin -->
+    <header class="yule-header">
+      <div class="header-top">
+        <h1 class="yule-title">PANELL ADMIN</h1>
+        <span class="admin-badge">👑 Administrador</span>
+      </div>
+    </header>
+
+    <!-- Contingut principal -->
+    <main class="scroll-content">
+      <!-- Edició activa -->
+      <section class="edition-card">
+        <div class="edition-title-row">
+          <span class="edition-name">Nadal 2026</span>
+          <span class="edition-status">Llistes obertes</span>
+        </div>
+        <div class="edition-metrics">
+          <div class="metric-box">
+            <div class="metric-val">6 membres</div>
+            <div class="metric-label">Familiars actius</div>
+          </div>
+          <div class="metric-box">
+            <div class="metric-val">30 €</div>
+            <div class="metric-label">Límit pressupostari</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Banner a Incompatibilitats -->
+      <a href="admin-incompatibilities-mobile.html" class="incomp-nav-banner">
+        <span>🔒 Incompatibilitats (3 actives)</span>
+        <span>Sorteig viable ✅ &rarr;</span>
+      </a>
+
+      <!-- Llista de Familiars -->
+      <div class="family-section-header">
+        <h2 class="section-title">Família (6)</h2>
+        <button class="btn-add-member">+ Convidar</button>
+      </div>
+
+      <!-- Membre 1 -->
+      <div class="member-item">
+        <div class="member-info">
+          <div class="member-name">Mònica</div>
+          <div class="member-email">monica@familia.cat</div>
+          <span class="member-wishlist-status status-ok">✓ 2 regals a la llista</span>
+        </div>
+        <button class="btn-whatsapp-copy" title="Copiar enllaç màgic per WhatsApp">
+          💬 WhatsApp
+        </button>
+      </div>
+
+      <!-- Membre 2 -->
+      <div class="member-item">
+        <div class="member-info">
+          <div class="member-name">Jordi (Avi)</div>
+          <div class="member-email">jordi.avi@familia.cat</div>
+          <span class="member-wishlist-status status-ok">✓ 1 regal amb foto</span>
+        </div>
+        <button class="btn-whatsapp-copy" title="Copiar enllaç màgic per WhatsApp">
+          💬 WhatsApp
+        </button>
+      </div>
+
+      <!-- Membre 3 -->
+      <div class="member-item">
+        <div class="member-info">
+          <div class="member-name">Carme</div>
+          <div class="member-email">carme@familia.cat</div>
+          <span class="member-wishlist-status status-pending">⏳ Pendent de posar idees</span>
+        </div>
+        <button class="btn-whatsapp-copy" title="Copiar enllaç màgic per WhatsApp">
+          💬 WhatsApp
+        </button>
+      </div>
+
+      <!-- Membre 4 -->
+      <div class="member-item">
+        <div class="member-info">
+          <div class="member-name">Pau (Tu)</div>
+          <div class="member-email">pau@familia.cat (Admin)</div>
+          <span class="member-wishlist-status status-ok">✓ 3 regals a la llista</span>
+        </div>
+      </div>
+
+      <!-- Botó de Sorteig Secret -->
+      <div class="draw-section">
+        <button class="btn-trigger-draw">
+          <span>🎲</span>
+          <span>EXECUTAR EL SORTEIG</span>
+        </button>
+        <p class="draw-hint">S'enviarà automàticament el correu a tots 6 membres respectant les exclusions.</p>
+      </div>
+    </main>
+
+    <!-- Barra de navegació -->
+    <nav class="bottom-nav">
+      <a href="member-gift-assigned-mobile.html" class="nav-item">
+        <span class="nav-icon">🎁</span>
+        <span>A qui regalo</span>
+      </a>
+      <a href="member-wishlist-mobile.html" class="nav-item">
+        <span class="nav-icon">⭐</span>
+        <span>Els meus desitjos</span>
+      </a>
+      <a href="admin-dashboard-mobile.html" class="nav-item active">
+        <span class="nav-icon">⚙️</span>
+        <span>Admin</span>
+      </a>
+    </nav>
+  </div>
+
+</body>
+</html>

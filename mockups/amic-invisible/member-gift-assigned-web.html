@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yule — El teu Amic Invisible (Web Desktop)</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pine-900: #0d1e17;
+      --pine-800: #143226;
+      --pine-700: #1b4332;
+      --pine-600: #2d6a4f;
+      --gold-500: #d4af37;
+      --gold-400: #e8c868;
+      --gold-100: #fbf6e2;
+      --berry-700: #780016;
+      --berry-600: #9d0208;
+      --snow-bg: #f8f6f0;
+      --card-bg: #ffffff;
+      --text-main: #1f2d26;
+      --text-muted: #5e6d65;
+      --border-warm: #e2dbce;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--snow-bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Navbar Desktop */
+    .desktop-nav {
+      background: linear-gradient(180deg, var(--pine-800) 0%, var(--pine-700) 100%);
+      color: white;
+      border-bottom: 2px solid var(--gold-500);
+      padding: 0 40px;
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: white;
+    }
+    .brand-logo {
+      font-size: 26px;
+    }
+    .brand-name {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+    .nav-link {
+      color: #d1dfd6;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+      transition: color 0.2s;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--gold-400);
+    }
+    .user-pill {
+      background: rgba(255,255,255,0.12);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(212,175,55,0.4);
+    }
+
+    /* Main Container */
+    .main-wrap {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+      flex: 1;
+      width: 100%;
+    }
+
+    /* Banner Gran de Revelació */
+    .desktop-reveal-banner {
+      background: #ffffff;
+      border: 2px solid var(--gold-500);
+      border-radius: 24px;
+      padding: 36px 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      box-shadow: 0 10px 30px rgba(27,67,50,0.06);
+      background-image: radial-gradient(circle at 100% 50%, #fffdf8 0%, #ffffff 80%);
+      margin-bottom: 36px;
+      position: relative;
+    }
+    .reveal-left {
+      max-width: 600px;
+    }
+    .reveal-subtitle {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--berry-600);
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 8px;
+    }
+    .recipient-title {
+      font-family: 'Cinzel', serif;
+      font-size: 42px;
+      font-weight: 800;
+      color: var(--pine-900);
+      margin-bottom: 12px;
+    }
+    .budget-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--gold-100);
+      color: #6a5100;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+      border: 1px dashed var(--gold-500);
+    }
+    .reveal-festive-art {
+      font-size: 72px;
+      filter: drop-shadow(0 8px 16px rgba(0,0,0,0.1));
+    }
+
+    /* Grid de regals de la persona */
+    .grid-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 22px;
+    }
+    .grid-title {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      color: var(--pine-900);
+      font-weight: 700;
+    }
+    .gifts-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .gift-card {
+      background: #ffffff;
+      border: 1px solid var(--border-warm);
+      border-radius: 18px;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.03);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    .gift-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 24px rgba(27,67,50,0.08);
+    }
+    .gift-card-media {
+      width: 100%;
+      height: 200px;
+      background: #ebe5d8;
+      position: relative;
+    }
+    .gift-card-media img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .badge-photo-source {
+      position: absolute;
+      bottom: 10px;
+      right: 10px;
+      background: rgba(0,0,0,0.7);
+      color: #fff;
+      font-size: 11px;
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+    .gift-card-content {
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-item-title {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--pine-900);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+    .card-item-price {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--berry-600);
+      margin-bottom: 10px;
+    }
+    .card-item-notes {
+      font-size: 13px;
+      color: var(--text-muted);
+      line-height: 1.4;
+      background: #faf7f2;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border-left: 3px solid var(--gold-500);
+      margin-bottom: 16px;
+      flex: 1;
+    }
+    .card-actions {
+      display: flex;
+      gap: 12px;
+    }
+    .btn-desktop-buy {
+      flex: 1;
+      background: var(--pine-700);
+      color: white;
+      text-decoration: none;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      text-align: center;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .btn-desktop-buy:hover {
+      background: var(--pine-600);
+    }
+    .btn-desktop-check {
+      background: #fff;
+      border: 1px solid var(--border-warm);
+      color: var(--pine-800);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    /* Footer */
+    .desktop-footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-warm);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Navegació Desktop -->
+  <nav class="desktop-nav">
+    <div class="nav-container">
+      <a href="#" class="brand">
+        <span class="brand-logo">🎄</span>
+        <span class="brand-name">YULE</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="member-gift-assigned-web.html" class="nav-link active">🎁 El meu Amic Invisible</a>
+        <a href="member-wishlist-web.html" class="nav-link">⭐ Els meus Desitjos</a>
+        <a href="admin-dashboard-web.html" class="nav-link">⚙️ Panell Admin</a>
+        <div class="user-pill">
+          <span>👤 Pau</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Contingut Principal -->
+  <main class="main-wrap">
+    <!-- Banner de Revelació -->
+    <section class="desktop-reveal-banner">
+      <div class="reveal-left">
+        <div class="reveal-subtitle">Nadal 2026 • El teu destinatari secret</div>
+        <h1 class="recipient-title">Aquest any et toca regalar a la Mònica!</h1>
+        <div class="budget-tag">
+          <span>🏷️</span> Pressupost màxim de la família: <strong>30,00 €</strong>
+        </div>
+      </div>
+      <div class="reveal-festive-art">
+        🎁✨
+      </div>
+    </section>
+
+    <!-- Capçalera llista -->
+    <div class="grid-header">
+      <h2 class="grid-title">Llista de desitjos de la Mònica</h2>
+      <span style="font-size: 14px; color: var(--text-muted);">2 idees guardades</span>
+    </div>
+
+    <!-- Graella de desitjos -->
+    <div class="gifts-grid">
+      <!-- Regal 1 amb Foto -->
+      <article class="gift-card">
+        <div class="gift-card-media">
+          <img src="https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=600&q=80" alt="Bufanda">
+          <span class="badge-photo-source">📷 Foto des de la botiga</span>
+        </div>
+        <div class="gift-card-content">
+          <h3 class="card-item-title">Bufanda de llana verda o grisa</h3>
+          <div class="card-item-price">Aprox. 24,90 €</div>
+          <div class="card-item-notes">
+            "La vaig veure a l'aparador del carrer Major, o qualsevol que sigui de llana suau i no piqui!"
+          </div>
+          <div class="card-actions">
+            <button class="btn-desktop-check">✓ Marcar com a comprat</button>
+          </div>
+        </div>
+      </article>
+
+      <!-- Regal 2 amb Enllaç Web -->
+      <article class="gift-card">
+        <div class="gift-card-content">
+          <h3 class="card-item-title">Llibre "Mirall Trencat" (Mercè Rodoreda)</h3>
+          <div class="card-item-price">18,50 €</div>
+          <div class="card-item-notes">
+            "Edició de butxaca o tapa dura de Club Editor."
+          </div>
+          <div class="card-actions">
+            <a href="https://llibreria.cat" target="_blank" class="btn-desktop-buy">
+              🛒 Obrir enllaç a la botiga
+            </a>
+            <button class="btn-desktop-check">✓ Comprat</button>
+          </div>
+        </div>
+      </article>
+    </div>
+  </main>
+
+  <footer class="desktop-footer">
+    Yule — L'Amic Invisible Familiar • Fet amb esperit nadalenc 🕯️
+  </footer>
+
+</body>
+</html>

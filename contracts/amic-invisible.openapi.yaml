@@ -1,0 +1,775 @@
+openapi: 3.1.0
+info:
+  title: Yule — API Amic Invisible Familiar
+  version: 0.1.0
+  description: >
+    Contracte OpenAPI compartit per al backend Go i els clients Web (React) i Mòbil (React Native Expo).
+    Cobreix l'accés sense contrasenyes per Magic Link, gestió de membres familiars, llistes de desitjos
+    amb pujada de fotos, matriu d'incompatibilitats privada, verificació matemàtica i execució del sorteig.
+
+servers:
+  - url: /api/v1
+    description: API v1
+
+security:
+  - BearerAuth: []
+
+paths:
+  # ---------------------------------------------------------------------------
+  # AUTH & MAGIC LINK
+  # ---------------------------------------------------------------------------
+  /auth/magic-link:
+    post:
+      summary: Sol·licitar l'enviament d'un Magic Link per correu
+      operationId: requestMagicLink
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email]
+              properties:
+                email:
+                  type: string
+                  format: email
+                  example: monica@familia.cat
+      responses:
+        '200':
+          description: Correu enviat (o simulat amb èxit)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MessageResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /auth/verify:
+    post:
+      summary: Validar el token d'un Magic Link i obtenir la sessió
+      operationId: verifyMagicLink
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [token]
+              properties:
+                token:
+                  type: string
+                  example: "ml_94f8a12cb3..."
+      responses:
+        '200':
+          description: Sessió validada amb èxit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/me:
+    get:
+      summary: Obtenir el perfil de l'usuari autenticat
+      operationId: getMe
+      responses:
+        '200':
+          description: Dades de l'usuari actiu
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ---------------------------------------------------------------------------
+  # EDITIONS (EDICIÓ ANUAL)
+  # ---------------------------------------------------------------------------
+  /editions/current:
+    get:
+      summary: Obtenir les dades de l'edició activa de Nadal
+      operationId: getCurrentEdition
+      responses:
+        '200':
+          description: Edició activa
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edition'
+    put:
+      summary: (Admin) Actualitzar paràmetres de l'edició (nom, pressupost màxim)
+      operationId: updateCurrentEdition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                  example: "Nadal 2026"
+                budget_limit:
+                  type: number
+                  format: float
+                  example: 30.00
+      responses:
+        '200':
+          description: Edició actualitzada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edition'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ---------------------------------------------------------------------------
+  # MEMBERS (CENS FAMILIAR)
+  # ---------------------------------------------------------------------------
+  /members:
+    get:
+      summary: (Admin) Obtenir la llista de tots els familiars i el seu estat
+      operationId: listMembers
+      responses:
+        '200':
+          description: Llistat de membres familiars
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/MemberAdminView'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: (Admin) Convidar un nou familiar mitjançant el seu nom i correu
+      operationId: createMember
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                  example: "Jordi (Avi)"
+                email:
+                  type: string
+                  format: email
+                  example: "jordi.avi@familia.cat"
+      responses:
+        '201':
+          description: Familiar creat i invitació enviada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberAdminView'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /members/{id}:
+    put:
+      summary: (Admin) Modificar dades d'un familiar o activar/desactivar participació
+      operationId: updateMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                name:
+                  type: string
+                email:
+                  type: string
+                  format: email
+                is_active:
+                  type: boolean
+      responses:
+        '200':
+          description: Familiar actualitzat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MemberAdminView'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------------------
+  # WISHLIST (LLISTA DE DESITJOS)
+  # ---------------------------------------------------------------------------
+  /wishlist:
+    get:
+      summary: Obtenir la llista de desitjos del propi usuari autenticat
+      operationId: getMyWishlist
+      responses:
+        '200':
+          description: Articles a la meva llista
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/WishlistItem'
+    post:
+      summary: Afegir un regal a la pròpia llista de desitjos
+      operationId: addWishlistItem
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWishlistItemRequest'
+      responses:
+        '201':
+          description: Article creat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishlistItem'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  /wishlist/{item_id}:
+    put:
+      summary: Modificar un article de la pròpia llista
+      operationId: updateWishlistItem
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWishlistItemRequest'
+      responses:
+        '200':
+          description: Article actualitzat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WishlistItem'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      summary: Eliminar un article de la pròpia llista
+      operationId: deleteWishlistItem
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Article eliminat correctament
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /upload:
+    post:
+      summary: Pujada d'imatge (foto càmera mòbil o fitxer des del PC)
+      operationId: uploadPhoto
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+      responses:
+        '201':
+          description: Imatge processada i comprimida
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [url]
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    example: "/uploads/photos/gift-a829f0.webp"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
+  # ---------------------------------------------------------------------------
+  # INCOMPATIBILITIES (100% ADMIN)
+  # ---------------------------------------------------------------------------
+  /incompatibilities:
+    get:
+      summary: (Admin) Obtenir totes les exclusions d'incompatibilitat actives
+      operationId: listIncompatibilities
+      responses:
+        '200':
+          description: Llistat privat d'incompatibilitats
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Incompatibility'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: (Admin) Crear una nova regla d'incompatibilitat
+      operationId: createIncompatibility
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [person1_id, person2_id, is_mutual]
+              properties:
+                person1_id:
+                  type: string
+                  format: uuid
+                person2_id:
+                  type: string
+                  format: uuid
+                is_mutual:
+                  type: boolean
+                  description: Si és true, cap dels dos pot regalar a l'altre
+                  example: true
+                notes:
+                  type: string
+                  example: "Parella convivent"
+      responses:
+        '201':
+          description: Regla d'incompatibilitat creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Incompatibility'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /incompatibilities/{id}:
+    delete:
+      summary: (Admin) Eliminar una regla d'incompatibilitat
+      operationId: deleteIncompatibility
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '204':
+          description: Regla eliminada
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /incompatibilities/check-viability:
+    get:
+      summary: (Admin) Comprovar en temps real si el sorteig és viable amb les exclusions actuals
+      operationId: checkViability
+      responses:
+        '200':
+          description: Resultat del càlcul matemàtic de viabilitat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ViabilityCheckResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ---------------------------------------------------------------------------
+  # DRAW & ASSIGNMENT (SORTEIG SECRET)
+  # ---------------------------------------------------------------------------
+  /draw:
+    post:
+      summary: (Admin) Executar el sorteig secret i enviar correus electrònics
+      operationId: executeDraw
+      responses:
+        '200':
+          description: Sorteig executat correctament i notificacions llançades
+          content:
+            application/json:
+              schema:
+                type: object
+                required: [status, drawn_at, participants_count, emails_dispatched]
+                properties:
+                  status:
+                    type: string
+                    example: "drawn"
+                  drawn_at:
+                    type: string
+                    format: date-time
+                  participants_count:
+                    type: integer
+                    example: 6
+                  emails_dispatched:
+                    type: integer
+                    example: 6
+        '400':
+          description: Configuració no viable o menys de 3 participants
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  /assignment:
+    get:
+      summary: Obtenir el destinatari secret assignat a l'usuari i la seva llista de desitjos
+      operationId: getMyAssignment
+      description: >
+        Secretisme garantit: retorna únicament la persona a qui l'usuari ha de fer el regal i
+        la llista de desitjos d'aquesta persona. Mai revela qui regala a l'usuari que fa la petició.
+      responses:
+        '200':
+          description: Assignació secreta i llista del receptor
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AssignmentResponse'
+        '404':
+          description: El sorteig encara no s'ha realitzat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /assignment/items/{item_id}/mark-purchased:
+    post:
+      summary: Marcar un regal del destinatari com a comprat/pensat (ús personal del regalador)
+      operationId: markItemPurchased
+      parameters:
+        - name: item_id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [is_purchased]
+              properties:
+                is_purchased:
+                  type: boolean
+      responses:
+        '200':
+          description: Estat actualitzat per al regalador
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  item_id:
+                    type: string
+                    format: uuid
+                  is_purchased:
+                    type: boolean
+
+components:
+  securitySchemes:
+    BearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    User:
+      type: object
+      required: [id, name, email, role]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Pau"
+        email:
+          type: string
+          format: email
+          example: "pau@familia.cat"
+        role:
+          type: string
+          enum: [admin, member]
+          example: "admin"
+
+    AuthSessionResponse:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+          description: JWT d'autenticació per a la sessió
+        user:
+          $ref: '#/components/schemas/User'
+
+    Edition:
+      type: object
+      required: [id, year, name, budget_limit, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        year:
+          type: integer
+          example: 2026
+        name:
+          type: string
+          example: "Nadal 2026"
+        budget_limit:
+          type: number
+          format: float
+          example: 30.00
+        status:
+          type: string
+          enum: [draft, wishlists_open, drawn, closed]
+          example: "wishlists_open"
+        drawn_at:
+          type: string
+          format: date-time
+          nullable: true
+
+    MemberAdminView:
+      type: object
+      required: [id, name, email, role, is_active, wishlist_items_count, magic_link_url]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Mònica"
+        email:
+          type: string
+          format: email
+          example: "monica@familia.cat"
+        role:
+          type: string
+          enum: [admin, member]
+        is_active:
+          type: boolean
+          example: true
+        wishlist_items_count:
+          type: integer
+          example: 2
+        magic_link_url:
+          type: string
+          description: Enllaç d'accés ràpid que l'admin pot copiar per WhatsApp
+          example: "https://yule.familia.cat/login?token=ml_a98f72..."
+
+    WishlistItem:
+      type: object
+      required: [id, edition_id, title, created_at]
+      properties:
+        id:
+          type: string
+          format: uuid
+        edition_id:
+          type: string
+          format: uuid
+        title:
+          type: string
+          example: "Bufanda de llana verda"
+        price_estimated:
+          type: number
+          format: float
+          nullable: true
+          example: 24.90
+        url:
+          type: string
+          format: uri
+          nullable: true
+          example: "https://llibreria.cat/llibre/123"
+        image_url:
+          type: string
+          format: uri
+          nullable: true
+          example: "/uploads/photos/gift-123.webp"
+        notes:
+          type: string
+          nullable: true
+          example: "Talla M, color fosc"
+        created_at:
+          type: string
+          format: date-time
+
+    CreateWishlistItemRequest:
+      type: object
+      required: [title]
+      properties:
+        title:
+          type: string
+          example: "Llibre Mirall Trencat"
+        price_estimated:
+          type: number
+          format: float
+          nullable: true
+          example: 18.50
+        url:
+          type: string
+          nullable: true
+          example: "https://llibreria.cat"
+        image_url:
+          type: string
+          nullable: true
+          example: "/uploads/photos/scarf.webp"
+        notes:
+          type: string
+          nullable: true
+          example: "Edició en català de Club Editor"
+
+    Incompatibility:
+      type: object
+      required: [id, person1, person2, is_mutual]
+      properties:
+        id:
+          type: string
+          format: uuid
+        person1:
+          $ref: '#/components/schemas/UserSummary'
+        person2:
+          $ref: '#/components/schemas/UserSummary'
+        is_mutual:
+          type: boolean
+          example: true
+        notes:
+          type: string
+          nullable: true
+
+    UserSummary:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+          example: "Jordi (Avi)"
+
+    ViabilityCheckResponse:
+      type: object
+      required: [is_viable, participants_count, active_rules_count]
+      properties:
+        is_viable:
+          type: boolean
+          example: true
+        participants_count:
+          type: integer
+          example: 6
+        active_rules_count:
+          type: integer
+          example: 3
+        reason:
+          type: string
+          nullable: true
+          example: "Tots els participants tenen almenys una combinació vàlida"
+
+    AssignmentResponse:
+      type: object
+      required: [recipient, budget_limit, wishlist]
+      properties:
+        recipient:
+          type: object
+          required: [id, name]
+          properties:
+            id:
+              type: string
+              format: uuid
+            name:
+              type: string
+              example: "Mònica"
+        budget_limit:
+          type: number
+          format: float
+          example: 30.00
+        wishlist:
+          type: array
+          items:
+            $ref: '#/components/schemas/AssignedWishlistItem'
+
+    AssignedWishlistItem:
+      allOf:
+        - $ref: '#/components/schemas/WishlistItem'
+        - type: object
+          properties:
+            is_marked_by_me:
+              type: boolean
+              description: Si l'amic invisible que fa la petició ho ha marcat com a pensat/comprat
+              example: false
+
+    MessageResponse:
+      type: object
+      required: [message]
+      properties:
+        message:
+          type: string
+          example: "Correu enviat correctament"
+
+    ErrorResponse:
+      type: object
+      required: [error, code]
+      properties:
+        error:
+          type: string
+          example: "Acció no permesa"
+        code:
+          type: string
+          example: "UNAUTHORIZED"
+
+  responses:
+    BadRequest:
+      description: Dades invàlides o paràmetres erronis
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Unauthorized:
+      description: Token invàlid, caducat o no facilitat
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    Forbidden:
+      description: Acció restringida exclusivament a l'administrador
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'
+    NotFound:
+      description: Recurs no trobat
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ErrorResponse'

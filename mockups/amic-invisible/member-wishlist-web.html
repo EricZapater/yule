@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="ca">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Yule — La meva Llista de Desitjos (Web Desktop)</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🎄</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700;800&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --pine-900: #0d1e17;
+      --pine-800: #143226;
+      --pine-700: #1b4332;
+      --pine-600: #2d6a4f;
+      --gold-500: #d4af37;
+      --gold-400: #e8c868;
+      --gold-100: #fbf6e2;
+      --berry-700: #780016;
+      --berry-600: #9d0208;
+      --snow-bg: #f8f6f0;
+      --card-bg: #ffffff;
+      --text-main: #1f2d26;
+      --text-muted: #5e6d65;
+      --border-warm: #e2dbce;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+      background-color: var(--snow-bg);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .desktop-nav {
+      background: linear-gradient(180deg, var(--pine-800) 0%, var(--pine-700) 100%);
+      color: white;
+      border-bottom: 2px solid var(--gold-500);
+      padding: 0 40px;
+    }
+    .nav-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      height: 72px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      color: white;
+    }
+    .brand-logo { font-size: 26px; }
+    .brand-name {
+      font-family: 'Cinzel', serif;
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: 1.5px;
+    }
+    .nav-links {
+      display: flex;
+      gap: 28px;
+      align-items: center;
+    }
+    .nav-link {
+      color: #d1dfd6;
+      text-decoration: none;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .nav-link:hover, .nav-link.active {
+      color: var(--gold-400);
+    }
+    .user-pill {
+      background: rgba(255,255,255,0.12);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 13px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      border: 1px solid rgba(212,175,55,0.4);
+    }
+
+    .main-wrap {
+      max-width: 1100px;
+      margin: 40px auto;
+      padding: 0 24px;
+      flex: 1;
+      width: 100%;
+    }
+
+    /* Layout dues columnes: formulari a l'esquerra, desitjos a la dreta */
+    .two-col-layout {
+      display: grid;
+      grid-template-columns: 460px 1fr;
+      gap: 36px;
+      align-items: start;
+    }
+
+    /* Formulari */
+    .form-panel {
+      background: #ffffff;
+      border: 1px solid var(--border-warm);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.03);
+    }
+    .panel-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--pine-900);
+      margin-bottom: 8px;
+    }
+    .panel-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+    .budget-info-badge {
+      background: var(--gold-100);
+      border: 1px solid var(--gold-500);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-size: 13px;
+      color: #694f00;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+    .form-label {
+      display: block;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--pine-900);
+      margin-bottom: 6px;
+    }
+    .form-control {
+      width: 100%;
+      padding: 12px 14px;
+      border: 1.5px solid var(--border-warm);
+      border-radius: 10px;
+      font-size: 14px;
+      font-family: inherit;
+      background: #faf8f5;
+    }
+    .form-control:focus {
+      outline: none;
+      border-color: var(--pine-700);
+      background: #fff;
+    }
+
+    /* Zona d'arrossegar/pujar foto */
+    .drag-drop-zone {
+      border: 2px dashed #c0b39f;
+      border-radius: 12px;
+      padding: 24px;
+      text-align: center;
+      background: #faf7f2;
+      cursor: pointer;
+      margin-bottom: 16px;
+      transition: background 0.2s, border-color 0.2s;
+    }
+    .drag-drop-zone:hover {
+      background: #f4eee3;
+      border-color: var(--pine-600);
+    }
+    .drop-icon { font-size: 32px; margin-bottom: 6px; }
+    .drop-title { font-size: 14px; font-weight: 700; color: var(--pine-800); }
+    .drop-hint { font-size: 12px; color: var(--text-muted); margin-top: 4px; }
+
+    .btn-save-wish {
+      width: 100%;
+      background: var(--berry-600);
+      color: white;
+      border: none;
+      padding: 14px;
+      border-radius: 10px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(157,2,8,0.25);
+    }
+    .btn-save-wish:hover {
+      background: var(--berry-700);
+    }
+
+    /* Columna dreta: llista de regals */
+    .list-panel {
+      background: #ffffff;
+      border: 1px solid var(--border-warm);
+      border-radius: 20px;
+      padding: 28px;
+      box-shadow: 0 4px 18px rgba(0,0,0,0.03);
+    }
+    .list-title {
+      font-family: 'Cinzel', serif;
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--pine-900);
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .items-count-badge {
+      font-size: 12px;
+      background: #eef3ef;
+      color: var(--pine-700);
+      padding: 4px 10px;
+      border-radius: 12px;
+    }
+
+    .wish-row-card {
+      display: flex;
+      gap: 16px;
+      border: 1px solid var(--border-warm);
+      border-radius: 14px;
+      padding: 14px;
+      margin-bottom: 14px;
+      align-items: center;
+      background: #faf8f5;
+    }
+    .wish-row-img {
+      width: 72px;
+      height: 72px;
+      border-radius: 10px;
+      object-fit: cover;
+      background: #e6dfd1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 28px;
+    }
+    .wish-row-content {
+      flex: 1;
+    }
+    .wish-row-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--pine-900);
+    }
+    .wish-row-price {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--berry-600);
+      margin-top: 2px;
+    }
+    .wish-row-desc {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    .wish-row-actions {
+      display: flex;
+      gap: 8px;
+    }
+    .btn-icon-action {
+      background: none;
+      border: 1px solid var(--border-warm);
+      padding: 8px 12px;
+      border-radius: 8px;
+      color: var(--text-muted);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    .btn-icon-action:hover {
+      background: #fff;
+      color: var(--berry-600);
+    }
+
+    .desktop-footer {
+      text-align: center;
+      padding: 24px;
+      font-size: 13px;
+      color: var(--text-muted);
+      border-top: 1px solid var(--border-warm);
+      margin-top: 40px;
+    }
+  </style>
+</head>
+<body>
+
+  <nav class="desktop-nav">
+    <div class="nav-container">
+      <a href="#" class="brand">
+        <span class="brand-logo">🎄</span>
+        <span class="brand-name">YULE</span>
+      </a>
+
+      <div class="nav-links">
+        <a href="member-gift-assigned-web.html" class="nav-link">🎁 El meu Amic Invisible</a>
+        <a href="member-wishlist-web.html" class="nav-link active">⭐ Els meus Desitjos</a>
+        <a href="admin-dashboard-web.html" class="nav-link">⚙️ Panell Admin</a>
+        <div class="user-pill">
+          <span>👤 Pau</span>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <main class="main-wrap">
+    <div class="two-col-layout">
+      <!-- Columna Esquerra: Formulari d'afegir desig -->
+      <section class="form-panel">
+        <h1 class="panel-title">Afegir una idea de regal</h1>
+        <p class="panel-sub">Ajuda el teu amic invisible a encertar el regal de Nadal.</p>
+
+        <div class="budget-info-badge">
+          <span>🏷️</span> Pressupost màxim de la família: <strong>30 €</strong>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Nom del regal o idea *</label>
+          <input type="text" class="form-control" placeholder="Ex: Bufanda de llana verda, llibre...">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Preu aproximat (€)</label>
+          <input type="number" class="form-control" placeholder="25.00">
+        </div>
+
+        <!-- Zona de Foto (Desktop Drag & Drop o triar fitxer) -->
+        <label class="form-label">Foto del regal (Opcional)</label>
+        <div class="drag-drop-zone">
+          <div class="drop-icon">📷</div>
+          <div class="drop-title">Arrossega una imatge o fes clic per cercar-la</div>
+          <div class="drop-hint">PNG, JPG o WebP (es comprimirà automàticament)</div>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Enllaç web (Opcional)</label>
+          <input type="url" class="form-control" placeholder="https://amazon.es/dp/... o botiga online">
+        </div>
+
+        <div class="form-group">
+          <label class="form-label">Comentaris o detalls (Opcional)</label>
+          <textarea class="form-control" rows="2" placeholder="Talla L, color blau marí, etc."></textarea>
+        </div>
+
+        <button type="button" class="btn-save-wish">+ Desar a la meva llista 🎁</button>
+      </section>
+
+      <!-- Columna Dreta: Els meus desitjos ja afegits -->
+      <section class="list-panel">
+        <div class="list-title">
+          <span>Els teus regals guardats</span>
+          <span class="items-count-badge">2 idees</span>
+        </div>
+
+        <!-- Desig 1 -->
+        <div class="wish-row-card">
+          <img class="wish-row-img" src="https://images.unsplash.com/photo-1544816155-12df9643f363?auto=format&fit=crop&w=150&q=80" alt="Bufanda">
+          <div class="wish-row-content">
+            <div class="wish-row-name">Bufanda de llana verda</div>
+            <div class="wish-row-price">24,90 €</div>
+            <div class="wish-row-desc">"Com la de l'aparador del carrer Major, sense que piqui!"</div>
+          </div>
+          <div class="wish-row-actions">
+            <button class="btn-icon-action" title="Eliminar">🗑️</button>
+          </div>
+        </div>
+
+        <!-- Desig 2 -->
+        <div class="wish-row-card">
+          <div class="wish-row-img">📚</div>
+          <div class="wish-row-content">
+            <div class="wish-row-name">Llibre "Mirall Trencat"</div>
+            <div class="wish-row-price">18,50 €</div>
+            <div class="wish-row-desc">Edició Club Editor • Enllaç web inclòs</div>
+          </div>
+          <div class="wish-row-actions">
+            <button class="btn-icon-action" title="Eliminar">🗑️</button>
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="desktop-footer">
+    Yule — L'Amic Invisible Familiar • Fet amb esperit nadalenc 🕯️
+  </footer>
+
+</body>
+</html>
