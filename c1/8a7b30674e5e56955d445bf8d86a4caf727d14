@@ -1,0 +1,38 @@
+.env.backend.example
+  h_42175f19913982 21-24
+backend/cmd/api/main.go
+  h_42175f19913982 104
+backend/internal/auth/handler.go
+  h_42175f19913982 55-70
+backend/internal/auth/model.go
+  h_42175f19913982 33-37
+backend/internal/auth/repository.go
+  h_42175f19913982 67-93
+backend/internal/auth/service.go
+  h_42175f19913982 88-123
+backend/internal/db/migrate.go
+  h_42175f19913982 23,25-27,29-31,34,36,40,46-50,52,56-59,62,66
+backend/internal/db/migrations/000001_init_schema.up.sql
+  h_42175f19913982 73-77
+contracts/amic-invisible.openapi.yaml
+  h_42175f19913982 74-109,124
+frontend/src/modules/amic-invisibles/api.ts
+  h_42175f19913982 14-16
+frontend/src/modules/amic-invisibles/store.ts
+  h_42175f19913982 25,64-80
+frontend/src/modules/amic-invisibles/views/AdminDashboardView.tsx
+  h_42175f19913982 29,32,63-71,288-309
+frontend/src/modules/amic-invisibles/views/LoginView.tsx
+  h_42175f19913982 11-12,15,23,25-26,29,46-56,61,66,82,103-109,111-112,114-122,124,126,130-157,161,175-177,179,182-198,200-215,217-232
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "c18a7b30674e5e56955d445bf8d86a4caf727d14",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
