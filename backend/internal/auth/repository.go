@@ -85,6 +85,13 @@ func (r *Repository) AttachToEdition(editionID, userID string) error {
 	return err
 }
 
+func (r *Repository) CountUsers() (int, error) {
+	var count int
+	query := `SELECT COUNT(*) FROM users`
+	err := r.db.QueryRow(query).Scan(&count)
+	return count, err
+}
+
 func (r *Repository) GetActiveEditionID() (string, error) {
 	var id string
 	query := `SELECT id FROM editions ORDER BY year DESC LIMIT 1`

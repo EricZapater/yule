@@ -97,8 +97,13 @@ func (s *Service) Register(name, email string) (*AuthSessionResponse, error) {
 	}
 
 	if user == nil {
+		role := "member"
+		count, _ := s.repo.CountUsers()
+		if count == 0 {
+			role = "admin" // El primer familiar que es registra és automàticament l'administrador
+		}
 		newID := uuid.New().String()
-		user, err = s.repo.CreateUser(newID, name, email, "member")
+		user, err = s.repo.CreateUser(newID, name, email, role)
 		if err != nil {
 			return nil, err
 		}

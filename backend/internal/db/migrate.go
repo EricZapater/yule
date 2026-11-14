@@ -3,6 +3,7 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
 	"os"
 )
 
@@ -20,19 +21,8 @@ func AutoMigrate(conn *sql.DB, migrationFile string) error {
 	return nil
 }
 
-// SeedInitialData afegeix l'administrador i l'edició si no existeixen.
+// SeedInitialData assegura l'edició activa i configura l'administrador si està definit a l'entorn.
 func SeedInitialData(conn *sql.DB) error {
-	adminEmail := os.Getenv("ADMIN_EMAIL")
-	if adminEmail == "" {
-		adminEmail = "eric@zapater.cat"
-	}
-	adminName := os.Getenv("ADMIN_NAME")
-	if adminName == "" {
-		adminName = "Èric"
-	}
-
-	fmt.Printf("🌱 Verificant usuari administrador (%s <%s>)...\n", adminName, adminEmail)
-
 	// 1. Assegurar edició actual 2026
 	seedEdition := `
 		INSERT INTO editions (id, year, name, budget_limit, status) VALUES
@@ -43,7 +33,23 @@ func SeedInitialData(conn *sql.DB) error {
 		return err
 	}
 
-	// 2. Inserir o actualitzar l'Administrador
+	adminEmail := os.Getenv("ADMIN_EMAIL")
+	if adminEmail == "" {
+		log.Println("ℹ️ Cap ADMIN_EMAIL configurat a .env.backend. El primer usuari que es registri serà administrador automàticament.")
+		return nil
+	}
+
+	adminName := os.Getenv("ADMIN_NAME")
+	if adminName == "" {
+		adminName = "Administrador"
+	}
+
+	log.Printf("👑 Sincronitzant usuari administrador (%s <%s>)...", adminName, adminEmail)
+
+	// 2. Netejar usuaris de prova anteriors si no tenen contingut
+	_, _ = conn.Exec(`DELETE FROM users WHERE (email LIKE '%@familia.cat' OR email = 'eric@zapater.cat') AND LOWER(email) <> LOWER($1) AND id NOT IN (SELECT user_id FROM wishlist_items)`, adminEmail)
+
+	// 3. Inserir o actualitzar l'Administrador definit a l'entorn
 	seedAdmin := `
 		INSERT INTO users (id, name, email, role) VALUES
 		('a0000000-0000-0000-0000-000000000001', $1, LOWER($2), 'admin')
@@ -53,7 +59,7 @@ func SeedInitialData(conn *sql.DB) error {
 		return err
 	}
 
-	// 3. Vincular l'Administrador a l'edició activa
+	// 4. Vincular l'Administrador a l'edició activa
 	seedAdminEdition := `
 		INSERT INTO edition_members (edition_id, user_id, is_active)
 		SELECT 'e0000000-0000-0000-0000-000000002026', id, true FROM users WHERE LOWER(email) = LOWER($1)
@@ -63,6 +69,6 @@ func SeedInitialData(conn *sql.DB) error {
 		return err
 	}
 
-	fmt.Println("✅ Administrador inicial sincronitzat amb èxit!")
+	log.Println("✅ Administrador inicial sincronitzat amb èxit!")
 	return nil
 }
