@@ -1,0 +1,41 @@
+# Dependències i gestors de paquets
+node_modules/
+.pnpm-store/
+.pnpm-debug.log*
+
+# Compilació i artefactes de build
+dist/
+build/
+*.tsbuildinfo
+
+# Fitxers de sistema operatiu
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Go (binaris i temporals)
+/bin/
+*.exe
+*.test
+*.prof
+backend/uploads/photos/*
+!backend/uploads/photos/.gitkeep
+
+# Variables d'entorn locals
+.env
+.env.local
+.env.*.local
+
+# Expo / React Native
+.expo/
+web-build/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
