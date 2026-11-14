@@ -1,0 +1,98 @@
+.npmrc
+  h_42175f19913982 1
+frontend/dist/assets/index-BZfiGWi_.js
+  h_42175f19913982 1-230
+frontend/dist/index.html
+  h_42175f19913982 1-16
+frontend/index.html
+  h_42175f19913982 1-16
+frontend/node_modules/.bin/browserslist
+  h_42175f19913982 1-21
+frontend/node_modules/.bin/tsc
+  h_42175f19913982 1-21
+frontend/node_modules/.bin/tsserver
+  h_42175f19913982 1-21
+frontend/node_modules/.bin/vite
+  h_42175f19913982 1-21
+frontend/node_modules/@emotion/react
+  h_42175f19913982 1
+frontend/node_modules/@emotion/styled
+  h_42175f19913982 1
+frontend/node_modules/@mui/icons-material
+  h_42175f19913982 1
+frontend/node_modules/@mui/material
+  h_42175f19913982 1
+frontend/node_modules/@types/node
+  h_42175f19913982 1
+frontend/node_modules/@types/react
+  h_42175f19913982 1
+frontend/node_modules/@types/react-dom
+  h_42175f19913982 1
+frontend/node_modules/@vitejs/plugin-react
+  h_42175f19913982 1
+frontend/node_modules/axios
+  h_42175f19913982 1
+frontend/node_modules/react
+  h_42175f19913982 1
+frontend/node_modules/react-dom
+  h_42175f19913982 1
+frontend/node_modules/react-router-dom
+  h_42175f19913982 1
+frontend/node_modules/typescript
+  h_42175f19913982 1
+frontend/node_modules/vite
+  h_42175f19913982 1
+frontend/node_modules/zustand
+  h_42175f19913982 1
+frontend/package.json
+  h_42175f19913982 1-30
+frontend/src/App.tsx
+  h_42175f19913982 1-16
+frontend/src/api/client.ts
+  h_42175f19913982 1-33
+frontend/src/main.tsx
+  h_42175f19913982 1-9
+frontend/src/modules/amic-invisibles/api.ts
+  h_42175f19913982 1-90
+frontend/src/modules/amic-invisibles/components/AppNavigation.tsx
+  h_42175f19913982 1-194
+frontend/src/modules/amic-invisibles/store.ts
+  h_42175f19913982 1-243
+frontend/src/modules/amic-invisibles/types.ts
+  h_42175f19913982 1-66
+frontend/src/modules/amic-invisibles/views/AdminDashboardView.tsx
+  h_42175f19913982 1-343
+frontend/src/modules/amic-invisibles/views/AdminIncompatibilitiesView.tsx
+  h_42175f19913982 1-342
+frontend/src/modules/amic-invisibles/views/GiftAssignedView.tsx
+  h_42175f19913982 1-267
+frontend/src/modules/amic-invisibles/views/LoginView.tsx
+  h_42175f19913982 1-186
+frontend/src/modules/amic-invisibles/views/WishlistView.tsx
+  h_42175f19913982 1-372
+frontend/src/router/index.tsx
+  h_42175f19913982 1-59
+frontend/src/theme/yuleTheme.ts
+  h_42175f19913982 1-83
+frontend/tsconfig.json
+  h_42175f19913982 1-24
+frontend/tsconfig.tsbuildinfo
+  h_42175f19913982 1
+frontend/vite.config.ts
+  h_42175f19913982 1-19
+pnpm-lock.yaml
+  h_42175f19913982 1-2022
+pnpm-workspace.yaml
+  h_42175f19913982 1-3
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "91e2c177d3a486af0bbaaa9e485e65463ef9e544",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
