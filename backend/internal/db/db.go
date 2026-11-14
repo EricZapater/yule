@@ -14,7 +14,29 @@ func Connect(dsn string) (*sql.DB, error) {
 	if dsn == "" {
 		dsn = os.Getenv("DATABASE_URL")
 		if dsn == "" {
-			dsn = "postgres://postgres:postgres@localhost:5432/yule?sslmode=disable"
+			host := os.Getenv("DB_HOST")
+			if host != "" {
+				port := os.Getenv("DB_PORT")
+				if port == "" {
+					port = "5432"
+				}
+				user := os.Getenv("DB_USER")
+				if user == "" {
+					user = "postgres"
+				}
+				pass := os.Getenv("DB_PASSWORD")
+				name := os.Getenv("DB_NAME")
+				if name == "" {
+					name = "yule"
+				}
+				ssl := os.Getenv("DB_SSLMODE")
+				if ssl == "" {
+					ssl = "disable"
+				}
+				dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, name, ssl)
+			} else {
+				dsn = "postgres://postgres:postgres@localhost:5432/yule?sslmode=disable"
+			}
 		}
 	}
 

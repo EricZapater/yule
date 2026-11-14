@@ -1,0 +1,198 @@
+name: Continuous Deployment (CD)
+
+on:
+  push:
+    branches:
+      - main
+    tags:
+      - 'v*.*.*'
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: 'Target Deployment Environment'
+        required: true
+        default: 'production'
+        type: choice
+        options:
+          - production
+      deploy_images:
+        description: 'Deploy containers after build'
+        required: true
+        default: true
+        type: boolean
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+  packages: write
+
+jobs:
+  # -----------------------------------------------------------------------
+  # Stage 1: Build and Push Docker Images to GHCR
+  # -----------------------------------------------------------------------
+  build-and-push:
+    name: Build & Publish Container Images (GHCR)
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to GitHub Container Registry (GHCR)
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # -----------------------------------------------------------------------
+      # Backend Image Build & Push
+      # -----------------------------------------------------------------------
+      - name: Extract metadata for Backend Docker image
+        id: meta-backend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/yule-backend
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Backend image
+        uses: docker/build-push-action@v6
+        with:
+          context: ./backend
+          file: ./backend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-backend.outputs.tags }}
+          labels: ${{ steps.meta-backend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # -----------------------------------------------------------------------
+      # Frontend Image Build & Push
+      # -----------------------------------------------------------------------
+      - name: Extract metadata for Frontend Docker image
+        id: meta-frontend
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository_owner }}/yule-frontend
+          tags: |
+            type=semver,pattern={{version}}
+            type=semver,pattern={{major}}.{{minor}}
+            type=sha,format=short,prefix=sha-
+            type=raw,value=latest,enable={{is_default_branch}}
+
+      - name: Build and push Frontend image
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./frontend/Dockerfile
+          push: true
+          tags: ${{ steps.meta-frontend.outputs.tags }}
+          labels: ${{ steps.meta-frontend.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+  # -----------------------------------------------------------------------
+  # Stage 2: Deploy Containers to Remote VPS via SSH & Traefik
+  # -----------------------------------------------------------------------
+  deploy-to-vps:
+    name: Deploy Containers to Remote VPS
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || inputs.deploy_images == true
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Copy docker-compose.yml to VPS
+        uses: appleboy/scp-action@v0.1.7
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          source: "docker-compose.yml"
+          target: "~/yule"
+
+      - name: Execute remote deployment commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: ${{ secrets.SSH_PORT || 22 }}
+          script: |
+            set -e
+            mkdir -p ~/yule
+            cd ~/yule
+            touch -a .env.backend .env.frontend
+            echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
+            docker compose pull
+            docker compose up -d --remove-orphans || (sleep 4 && docker compose up -d --remove-orphans)
+            docker image prune -f || true
+            docker compose ps
+
+      # -----------------------------------------------------------------------
+      # Stage 3: Registrar Desplegament a RawCraft Monitor
+      # -----------------------------------------------------------------------
+      - name: 🚀 Registrar Desplegament a RawCraft Monitor
+        if: always()
+        env:
+          RAWCRAFT_API_KEY: ${{ secrets.RAWCRAFT_API_KEY }}
+          DEPLOY_VERSION: ${{ github.ref_name }}
+          COMMIT_SHA: ${{ github.sha }}
+          COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
+          DEPLOY_BRANCH: ${{ github.ref_name }}
+          DEPLOYED_BY: ${{ github.actor }}
+          DEPLOY_STATUS: ${{ job.status == 'success' && 'SUCCESS' || 'FAILED' }}
+        run: |
+          if [ -z "$RAWCRAFT_API_KEY" ]; then
+            echo "RAWCRAFT_API_KEY no configurada als secrets, ometent registre."
+            exit 0
+          fi
+
+          if [ -z "$COMMIT_MESSAGE" ]; then
+            COMMIT_MESSAGE=$(git log -1 --pretty=%B 2>/dev/null || true)
+          fi
+
+          failed=0
+          for product in yule-backend yule-frontend; do
+            payload=$(jq -n \
+              --arg product_name "$product" \
+              --arg environment "production" \
+              --arg version "$DEPLOY_VERSION" \
+              --arg commit_sha "$COMMIT_SHA" \
+              --arg commit_message "$COMMIT_MESSAGE" \
+              --arg branch "$DEPLOY_BRANCH" \
+              --arg deployed_by "$DEPLOYED_BY" \
+              --arg status "$DEPLOY_STATUS" \
+              '{
+                product_name: $product_name,
+                environment: $environment,
+                version: $version,
+                commit_sha: $commit_sha,
+                commit_message: $commit_message,
+                branch: $branch,
+                deployed_by: $deployed_by,
+                status: $status
+              }')
+
+            echo "Registrant desplegament per a $product ($DEPLOY_STATUS)..."
+            if ! curl -fsSL -X POST https://api.monitor.ericzapater.cat/api/v1/deploys \
+              -H "Content-Type: application/json" \
+              -H "X-Agent-Key: $RAWCRAFT_API_KEY" \
+              -d "$payload"; then
+              echo "::warning::Error registrant $product a RawCraft Monitor"
+              failed=1
+            fi
+          done
+
+          exit $failed
