@@ -19,18 +19,47 @@ type Mailer struct {
 	from string
 }
 
+// loginAuth implementa l'autenticació AUTH LOGIN requerida per molts servidors SMTP (cPanel, Microsoft, etc.)
+type loginAuth struct {
+	username, password string
+}
+
+func LoginAuth(username, password string) smtp.Auth {
+	return &loginAuth{username, password}
+}
+
+func (a *loginAuth) Start(server *smtp.ServerInfo) (string, []byte, error) {
+	return "LOGIN", []byte(a.username), nil
+}
+
+func (a *loginAuth) Next(fromServer []byte, more bool) ([]byte, error) {
+	if more {
+		prompt := strings.ToLower(strings.TrimSpace(string(fromServer)))
+		switch {
+		case strings.HasPrefix(prompt, "username") || strings.Contains(prompt, "user"):
+			return []byte(a.username), nil
+		case strings.HasPrefix(prompt, "password") || strings.Contains(prompt, "pass"):
+			return []byte(a.password), nil
+		default:
+			// Fallback: si el servidor envia un repte desconegut
+			return []byte(a.username), nil
+		}
+	}
+	return nil, nil
+}
+
 func NewMailerFromEnv() *Mailer {
-	host := os.Getenv("SMTP_HOST")
-	port := os.Getenv("SMTP_PORT")
+	host := strings.TrimSpace(os.Getenv("SMTP_HOST"))
+	port := strings.TrimSpace(os.Getenv("SMTP_PORT"))
 	if port == "" {
 		port = "587"
 	}
-	user := os.Getenv("SMTP_USER")
-	pass := os.Getenv("SMTP_PASSWORD")
+	user := strings.TrimSpace(os.Getenv("SMTP_USER"))
+	pass := strings.TrimSpace(os.Getenv("SMTP_PASSWORD"))
 	if pass == "" {
-		pass = os.Getenv("SMTP_PASS")
+		pass = strings.TrimSpace(os.Getenv("SMTP_PASS"))
 	}
-	from := os.Getenv("SMTP_FROM")
+	from := strings.TrimSpace(os.Getenv("SMTP_FROM"))
 	if from == "" {
 		if user != "" {
 			from = fmt.Sprintf("Yule Amic Invisible <%s>", user)
@@ -40,9 +69,9 @@ func NewMailerFromEnv() *Mailer {
 	}
 
 	if host != "" {
-		log.Printf("📧 Mailer configurat per SMTP: %s:%s (remitent: %s)", host, port, from)
+		log.Printf("📧 [SMTP CONFIGURAT] Host=%s:%s, Usuari=%s, Remitent=%s", host, port, user, from)
 	} else {
-		log.Println("ℹ️ Cap SMTP configurat (SMTP_HOST buit). Els correus i enllaços màgics es mostraran als logs.")
+		log.Println("ℹ️ [SENSE SMTP] SMTP_HOST buit. Els Magic Links es mostraran als logs del contenidor.")
 	}
 
 	return &Mailer{
@@ -55,14 +84,13 @@ func NewMailerFromEnv() *Mailer {
 }
 
 func (m *Mailer) IsConfigured() bool {
-	return m.host != ""
+	return m != nil && m.host != ""
 }
 
 // SendMagicLink envia el correu d'accés directe amb un bonic disseny nadalenc.
 func (m *Mailer) SendMagicLink(toEmail, toName, magicLinkURL string) error {
 	if !m.IsConfigured() {
-		log.Printf("📧 [SIMULACIÓ SMTP] Magic link per a %s (%s): %s", toName, toEmail, magicLinkURL)
-		return nil
+		return fmt.Errorf("SMTP no està configurat (SMTP_HOST està buit a l'entorn del contenidor)")
 	}
 
 	if toName == "" {
@@ -112,7 +140,6 @@ func (m *Mailer) SendMagicLink(toEmail, toName, magicLinkURL string) error {
 func (m *Mailer) sendEmail(toEmail, subject, htmlBody string) error {
 	addr := net.JoinHostPort(m.host, m.port)
 
-	// Extreure l'adreça de correu del remitent (per exemple de "Nom <mail@domini.cat>" -> "mail@domini.cat")
 	fromAddr := m.from
 	if start := strings.Index(m.from, "<"); start != -1 {
 		if end := strings.Index(m.from, ">"); end > start {
@@ -134,19 +161,16 @@ func (m *Mailer) sendEmail(toEmail, subject, htmlBody string) error {
 	}
 	message += "\r\n" + htmlBody
 
-	var auth smtp.Auth
-	if m.user != "" && m.pass != "" {
-		auth = smtp.PlainAuth("", m.user, m.pass, m.host)
-	}
+	dialer := &net.Dialer{Timeout: 15 * time.Second}
 
-	// Port 465 utilitza SSL/TLS directe
+	// Port 465: connexió directa TLS
 	if m.port == "465" {
 		tlsConfig := &tls.Config{
 			ServerName: m.host,
 		}
-		conn, err := tls.Dial("tcp", addr, tlsConfig)
+		conn, err := tls.DialWithDialer(dialer, "tcp", addr, tlsConfig)
 		if err != nil {
-			return fmt.Errorf("error tls dial a %s: %w", addr, err)
+			return fmt.Errorf("error tls dial a %s (15s timeout): %w", addr, err)
 		}
 		defer conn.Close()
 
@@ -156,31 +180,73 @@ func (m *Mailer) sendEmail(toEmail, subject, htmlBody string) error {
 		}
 		defer client.Close()
 
-		if auth != nil {
-			if ok, _ := client.Extension("AUTH"); ok {
-				if err = client.Auth(auth); err != nil {
-					return fmt.Errorf("error autenticant smtp: %w", err)
+		return m.authenticateAndSend(client, fromAddr, toEmail, []byte(message))
+	}
+
+	// Ports 587 o 25 (Connexió TCP estàndard amb STARTTLS)
+	conn, err := dialer.Dial("tcp", addr)
+	if err != nil {
+		return fmt.Errorf("error connectant a %s (15s timeout): %w", addr, err)
+	}
+	defer conn.Close()
+
+	client, err := smtp.NewClient(conn, m.host)
+	if err != nil {
+		return fmt.Errorf("error iniciant sessió smtp: %w", err)
+	}
+	defer client.Close()
+
+	// Intentar STARTTLS si el servidor ho suporta
+	if ok, _ := client.Extension("STARTTLS"); ok {
+		tlsConfig := &tls.Config{
+			ServerName: m.host,
+		}
+		if err = client.StartTLS(tlsConfig); err != nil {
+			return fmt.Errorf("error negociant STARTTLS amb %s: %w", m.host, err)
+		}
+	}
+
+	return m.authenticateAndSend(client, fromAddr, toEmail, []byte(message))
+}
+
+func (m *Mailer) authenticateAndSend(client *smtp.Client, fromAddr, toEmail string, message []byte) error {
+	// Autenticació si tenim credencials
+	if m.user != "" && m.pass != "" {
+		if ok, auths := client.Extension("AUTH"); ok {
+			upperAuths := strings.ToUpper(auths)
+			var auth smtp.Auth
+
+			if strings.Contains(upperAuths, "PLAIN") {
+				auth = smtp.PlainAuth("", m.user, m.pass, m.host)
+			} else if strings.Contains(upperAuths, "LOGIN") {
+				auth = LoginAuth(m.user, m.pass)
+			} else {
+				// Prova PlainAuth per defecte
+				auth = smtp.PlainAuth("", m.user, m.pass, m.host)
+			}
+
+			if err := client.Auth(auth); err != nil {
+				// Si PlainAuth falla, provem LoginAuth com a fallback
+				if fallbackErr := client.Auth(LoginAuth(m.user, m.pass)); fallbackErr != nil {
+					return fmt.Errorf("error autenticant a l'SMTP (%s): %w", m.host, err)
 				}
 			}
 		}
-
-		if err = client.Mail(fromAddr); err != nil {
-			return fmt.Errorf("error smtp mail from: %w", err)
-		}
-		if err = client.Rcpt(toEmail); err != nil {
-			return fmt.Errorf("error smtp rcpt to: %w", err)
-		}
-
-		w, err := client.Data()
-		if err != nil {
-			return fmt.Errorf("error smtp data writer: %w", err)
-		}
-		if _, err = w.Write([]byte(message)); err != nil {
-			return fmt.Errorf("error escrivint missatge smtp: %w", err)
-		}
-		return w.Close()
 	}
 
-	// Ports 587 o 25 (amb STARTTLS si és suportat)
-	return smtp.SendMail(addr, auth, fromAddr, []string{toEmail}, []byte(message))
+	if err := client.Mail(fromAddr); err != nil {
+		return fmt.Errorf("error especificant remitent (%s): %w", fromAddr, err)
+	}
+	if err := client.Rcpt(toEmail); err != nil {
+		return fmt.Errorf("error especificant destinatari (%s): %w", toEmail, err)
+	}
+
+	w, err := client.Data()
+	if err != nil {
+		return fmt.Errorf("error obrint canal de dades: %w", err)
+	}
+	if _, err = w.Write(message); err != nil {
+		return fmt.Errorf("error escrivint el cos del missatge: %w", err)
+	}
+	return w.Close()
 }

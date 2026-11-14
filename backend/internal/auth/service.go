@@ -21,6 +21,7 @@ var (
 
 type Mailer interface {
 	SendMagicLink(toEmail, toName, magicLinkURL string) error
+	IsConfigured() bool
 }
 
 type Service struct {
@@ -95,12 +96,15 @@ func (s *Service) RequestMagicLink(rawEmail string) (string, error) {
 	magicURL := fmt.Sprintf("%s/login?token=%s", baseURL, token)
 	log.Printf("📧 [CORREU YULE] Enllaç màgic per a %s (%s): %s", user.Name, user.Email, magicURL)
 
-	if s.mailer != nil {
+	if s.mailer != nil && s.mailer.IsConfigured() {
+		log.Printf("🚀 Intentant enviar correu SMTP a %s...", user.Email)
 		if err := s.mailer.SendMagicLink(user.Email, user.Name, magicURL); err != nil {
-			log.Printf("⚠️ Error enviant correu SMTP a %s: %v", user.Email, err)
+			log.Printf("❌ ERROR enviant correu SMTP a %s: %v", user.Email, err)
 		} else {
-			log.Printf("✉️ Correu enviat amb èxit per SMTP a %s", user.Email)
+			log.Printf("✅ Correu lliurat amb èxit al servidor SMTP per a %s", user.Email)
 		}
+	} else {
+		log.Printf("ℹ️ [SENSE SMTP] El contenidor no té SMTP_HOST configurat a l'entorn. Utilitza l'enllaç superior.")
 	}
 
 	return token, nil
