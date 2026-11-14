@@ -1,0 +1,16 @@
+backend/cmd/api/main.go
+  h_42175f19913982 29
+backend/internal/db/db.go
+  h_42175f19913982 6-7,38-55,57,60-61
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "ef1ea562beb4498453d62afc4b35b102fe8769b6",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
