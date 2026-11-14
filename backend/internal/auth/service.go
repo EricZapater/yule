@@ -5,6 +5,8 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"os"
+	"strings"
 	"time"
 	"yule/backend/internal/shared"
 
@@ -12,8 +14,8 @@ import (
 )
 
 var (
-	ErrUserNotFound    = errors.New("aquest correu no està registrat a la família")
-	ErrTokenInvalid    = errors.New("enllaç màgic invàlid o caducat")
+	ErrUserNotFound = errors.New("aquest correu no està registrat a la família")
+	ErrTokenInvalid = errors.New("enllaç màgic invàlid o caducat")
 )
 
 type Service struct {
@@ -25,13 +27,38 @@ func NewService(repo *Repository) *Service {
 }
 
 // RequestMagicLink genera un token d'un sol ús i simula/envia el correu.
-func (s *Service) RequestMagicLink(email string) (string, error) {
+func (s *Service) RequestMagicLink(rawEmail string) (string, error) {
+	email := strings.ToLower(strings.TrimSpace(rawEmail))
 	user, err := s.repo.FindUserByEmail(email)
 	if err != nil {
 		return "", err
 	}
+
+	// Si l'usuari no existeix encara a la base de dades:
 	if user == nil {
-		return "", ErrUserNotFound
+		adminEnvEmail := strings.ToLower(strings.TrimSpace(os.Getenv("ADMIN_EMAIL")))
+		count, _ := s.repo.CountUsers()
+
+		// Cas 1: L'email és el de l'ADMIN_EMAIL configurat a l'entorn
+		// Cas 2: És el primer usuari que intenta entrar al sistema
+		if (adminEnvEmail != "" && email == adminEnvEmail) || count == 0 {
+			adminName := strings.TrimSpace(os.Getenv("ADMIN_NAME"))
+			if adminName == "" {
+				adminName = "Administrador"
+			}
+			newID := uuid.New().String()
+			user, err = s.repo.CreateUser(newID, adminName, email, "admin")
+			if err != nil {
+				return "", fmt.Errorf("error creant usuari admin automàtic: %w", err)
+			}
+			editionID, _ := s.repo.GetActiveEditionID()
+			if editionID != "" {
+				_ = s.repo.AttachToEdition(editionID, user.ID)
+			}
+			fmt.Printf("👑 Usuari administrador creat automàticament per accés inicial (%s <%s>)\n", adminName, email)
+		} else {
+			return "", ErrUserNotFound
+		}
 	}
 
 	bytes := make([]byte, 16)
@@ -46,8 +73,12 @@ func (s *Service) RequestMagicLink(email string) (string, error) {
 		return "", err
 	}
 
-	// En un entorn real aquí s'envia el correu per SMTP
-	fmt.Printf("📧 [CORREU YULE] Enllaç màgic per a %s: http://localhost:5173/login?token=%s\n", user.Email, token)
+	baseURL := os.Getenv("APP_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://yule.ericzapater.cat"
+	}
+
+	fmt.Printf("📧 [CORREU YULE] Enllaç màgic per a %s: %s/login?token=%s\n", user.Email, baseURL, token)
 
 	return token, nil
 }

@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strings"
+
+	"github.com/google/uuid"
 )
 
 // AutoMigrate llegeix el fitxer SQL de migració inicial i l'aplica si les taules no existeixen.
@@ -33,42 +36,43 @@ func SeedInitialData(conn *sql.DB) error {
 		return err
 	}
 
-	adminEmail := os.Getenv("ADMIN_EMAIL")
+	adminEmail := strings.ToLower(strings.TrimSpace(os.Getenv("ADMIN_EMAIL")))
 	if adminEmail == "" {
-		log.Println("ℹ️ Cap ADMIN_EMAIL configurat a .env.backend. El primer usuari que es registri serà administrador automàticament.")
+		log.Println("ℹ️ Cap ADMIN_EMAIL configurat a .env.backend. El primer usuari que accedeixi serà administrador automàticament.")
 		return nil
 	}
 
-	adminName := os.Getenv("ADMIN_NAME")
+	adminName := strings.TrimSpace(os.Getenv("ADMIN_NAME"))
 	if adminName == "" {
 		adminName = "Administrador"
 	}
 
 	log.Printf("👑 Sincronitzant usuari administrador (%s <%s>)...", adminName, adminEmail)
 
-	// 2. Netejar usuaris de prova anteriors si no tenen contingut
-	_, _ = conn.Exec(`DELETE FROM users WHERE (email LIKE '%@familia.cat' OR email = 'eric@zapater.cat') AND LOWER(email) <> LOWER($1) AND id NOT IN (SELECT user_id FROM wishlist_items)`, adminEmail)
-
-	// 3. Inserir o actualitzar l'Administrador definit a l'entorn
-	seedAdmin := `
-		INSERT INTO users (id, name, email, role) VALUES
-		('a0000000-0000-0000-0000-000000000001', $1, LOWER($2), 'admin')
-		ON CONFLICT (email) DO UPDATE SET role = 'admin', name = EXCLUDED.name;
-	`
-	if _, err := conn.Exec(seedAdmin, adminName, adminEmail); err != nil {
+	// 2. Inserir o actualitzar l'Administrador definit a l'entorn
+	newID := uuid.New().String()
+	var adminUserID string
+	err := conn.QueryRow(`
+		INSERT INTO users (id, name, email, role) VALUES ($1, $2, $3, 'admin')
+		ON CONFLICT (email) DO UPDATE SET role = 'admin', name = EXCLUDED.name
+		RETURNING id
+	`, newID, adminName, adminEmail).Scan(&adminUserID)
+	if err != nil {
+		log.Printf("⚠️ Error sincronitzant admin a la BD: %v", err)
 		return err
 	}
 
-	// 4. Vincular l'Administrador a l'edició activa
-	seedAdminEdition := `
+	// 3. Vincular l'Administrador a l'edició activa
+	_, err = conn.Exec(`
 		INSERT INTO edition_members (edition_id, user_id, is_active)
-		SELECT 'e0000000-0000-0000-0000-000000002026', id, true FROM users WHERE LOWER(email) = LOWER($1)
-		ON CONFLICT DO NOTHING;
-	`
-	if _, err := conn.Exec(seedAdminEdition, adminEmail); err != nil {
+		VALUES ('e0000000-0000-0000-0000-000000002026', $1, true)
+		ON CONFLICT DO NOTHING
+	`, adminUserID)
+	if err != nil {
+		log.Printf("⚠️ Error vinculant admin a l'edició: %v", err)
 		return err
 	}
 
-	log.Println("✅ Administrador inicial sincronitzat amb èxit!")
+	log.Printf("✅ Administrador (%s <%s>) preparat amb èxit!", adminName, adminEmail)
 	return nil
 }
