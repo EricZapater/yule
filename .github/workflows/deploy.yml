@@ -120,7 +120,7 @@ jobs:
           key: ${{ secrets.SSH_KEY }}
           port: ${{ secrets.SSH_PORT || 22 }}
           source: "docker-compose.yml"
-          target: "/opt/app/yule"
+          target: "/opt/apps/yule"
 
       - name: Execute remote deployment commands via SSH
         uses: appleboy/ssh-action@v1.0.3
@@ -131,8 +131,8 @@ jobs:
           port: ${{ secrets.SSH_PORT || 22 }}
           script: |
             set -e
-            mkdir -p /opt/app/yule
-            cd /opt/app/yule
+            mkdir -p /opt/apps/yule
+            cd /opt/apps/yule
             touch -a .env.backend .env.frontend
             echo "${{ secrets.GITHUB_TOKEN }}" | docker login ghcr.io -u "${{ github.actor }}" --password-stdin
             docker compose pull
