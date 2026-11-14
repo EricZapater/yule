@@ -1,0 +1,20 @@
+.env.backend.example
+  h_42175f19913982 21-23
+backend/internal/auth/repository.go
+  h_42175f19913982 88-94
+backend/internal/auth/service.go
+  h_42175f19913982 100-104,106
+backend/internal/db/migrate.go
+  h_42175f19913982 6,24,36-52,62,72
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "11f17bea486a2436eec528a51f2305ae4a595425",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
