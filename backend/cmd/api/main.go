@@ -83,13 +83,26 @@ func main() {
 	// Fitxers estàtics per fotos
 	router.Static("/uploads/photos", uploadDir)
 
-	// Health check
-	router.GET("/health", func(c *gin.Context) {
-		c.JSON(http.StatusOK, gin.H{"status": "ok", "app": "yule-backend"})
-	})
+	// Health check handlers
+	healthHandler := func(c *gin.Context) {
+		dbStatus := "connected"
+		if conn == nil || conn.Ping() != nil {
+			dbStatus = "disconnected"
+		}
+		c.JSON(http.StatusOK, gin.H{
+			"status":   "ok",
+			"app":      "yule-backend",
+			"database": dbStatus,
+		})
+	}
+
+	router.GET("/health", healthHandler)
 
 	api := router.Group("/api/v1")
 	{
+		// Health check a nivell d'API v1
+		api.GET("/health", healthHandler)
+
 		// Rutes públiques
 		api.POST("/auth/magic-link", authHandler.RequestMagicLink)
 		api.POST("/auth/verify", authHandler.VerifyMagicLink)
