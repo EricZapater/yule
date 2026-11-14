@@ -1,0 +1,22 @@
+backend/internal/auth/repository.go
+  h_42175f19913982 18-23
+backend/internal/auth/service.go
+  h_42175f19913982 8,33-34,37,45,57,64,68-69,81,90-91
+backend/internal/shared/middleware.go
+  h_42175f19913982 63-68
+frontend/nginx.conf
+  h_42175f19913982 8-27
+frontend/src/modules/amic-invisibles/views/LoginView.tsx
+  h_42175f19913982 65-74
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "79eac82bdd074e2d13b8402e04f25d3429263029",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
