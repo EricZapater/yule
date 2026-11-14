@@ -64,3 +64,30 @@ func (r *Repository) MarkMagicLinkUsed(id string) error {
 	_, err := r.db.Exec(query, id)
 	return err
 }
+
+func (r *Repository) CreateUser(id, name, email, role string) (*User, error) {
+	query := `
+		INSERT INTO users (id, name, email, role)
+		VALUES ($1, $2, LOWER($3), $4)
+		RETURNING id, name, email, role, created_at, updated_at
+	`
+	var u User
+	err := r.db.QueryRow(query, id, name, email, role).Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.CreatedAt, &u.UpdatedAt)
+	if err != nil {
+		return nil, err
+	}
+	return &u, nil
+}
+
+func (r *Repository) AttachToEdition(editionID, userID string) error {
+	query := `INSERT INTO edition_members (edition_id, user_id, is_active) VALUES ($1, $2, true) ON CONFLICT DO NOTHING`
+	_, err := r.db.Exec(query, editionID, userID)
+	return err
+}
+
+func (r *Repository) GetActiveEditionID() (string, error) {
+	var id string
+	query := `SELECT id FROM editions ORDER BY year DESC LIMIT 1`
+	err := r.db.QueryRow(query).Scan(&id)
+	return id, err
+}

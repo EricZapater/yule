@@ -70,6 +70,11 @@ CREATE TABLE IF NOT EXISTS assignments (
     CONSTRAINT chk_no_self_gift CHECK (giver_id <> receiver_id)
 );
 
+-- Edició inicial per defecte (Nadal 2026)
+INSERT INTO editions (id, year, name, budget_limit, status) VALUES
+('e0000000-0000-0000-0000-000000002026', 2026, 'Nadal 2026', 30.00, 'wishlists_open')
+ON CONFLICT (year) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS purchased_items (
     giver_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
     item_id UUID NOT NULL REFERENCES wishlist_items(id) ON DELETE CASCADE,

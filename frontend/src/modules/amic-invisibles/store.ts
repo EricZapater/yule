@@ -22,6 +22,7 @@ interface YuleState {
   error: string | null;
 
   // Actions
+  register: (name: string, email: string) => Promise<boolean>;
   loginWithToken: (token: string) => Promise<boolean>;
   logout: () => void;
   fetchMe: () => Promise<void>;
@@ -59,6 +60,23 @@ export const useYuleStore = create<YuleState>((set, get) => ({
   viability: null,
   isLoading: false,
   error: null,
+
+  register: async (name: string, email: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      const res = await yuleApi.register(name, email);
+      localStorage.setItem('yule_auth_token', res.data.token);
+      localStorage.setItem('yule_user_profile', JSON.stringify(res.data.user));
+      set({ currentUser: res.data.user, isLoading: false });
+      return true;
+    } catch (err: any) {
+      set({
+        isLoading: false,
+        error: err.response?.data?.message || 'Error registrant el familiar.',
+      });
+      return false;
+    }
+  },
 
   loginWithToken: async (token: string) => {
     try {

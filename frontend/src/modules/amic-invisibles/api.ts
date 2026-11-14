@@ -11,6 +11,9 @@ import {
 
 export const yuleApi = {
   // Auth
+  register: (name: string, email: string) =>
+    apiClient.post<{ token: string; user: User }>('/auth/register', { name, email }),
+
   requestMagicLink: (email: string) =>
     apiClient.post<{ message: string }>('/auth/magic-link', { email }),
 

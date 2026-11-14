@@ -71,6 +71,42 @@ paths:
         '401':
           $ref: '#/components/responses/Unauthorized'
 
+  /auth/register:
+    post:
+      summary: Registre lliure d'un nou membre familiar a l'edició actual
+      operationId: register
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email]
+              properties:
+                name:
+                  type: string
+                  example: Maria
+                email:
+                  type: string
+                  format: email
+                  example: maria@familia.cat
+      responses:
+        '200':
+          description: Membre registrat o existent, i sessió creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+        '201':
+          description: Membre registrat i sessió creada
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSessionResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /auth/me:
     get:
       summary: Obtenir el perfil de l'usuari autenticat
@@ -84,6 +120,7 @@ paths:
                 $ref: '#/components/schemas/User'
         '401':
           $ref: '#/components/responses/Unauthorized'
+
 
   # ---------------------------------------------------------------------------
   # EDITIONS (EDICIÓ ANUAL)

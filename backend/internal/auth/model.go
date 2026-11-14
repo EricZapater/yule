@@ -30,6 +30,11 @@ type VerifyMagicLinkInput struct {
 	Token string `json:"token" binding:"required"`
 }
 
+type RegisterInput struct {
+	Name  string `json:"name" binding:"required"`
+	Email string `json:"email" binding:"required,email"`
+}
+
 type AuthSessionResponse struct {
 	Token string `json:"token"`
 	User  User   `json:"user"`

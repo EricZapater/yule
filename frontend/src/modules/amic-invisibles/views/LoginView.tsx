@@ -8,9 +8,11 @@ import {
   Button,
   Alert,
   CircularProgress,
-  Divider,
+  Tabs,
+  Tab,
 } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
+import HowToRegIcon from '@mui/icons-material/HowToReg';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { useYuleStore } from '../store';
 import { yuleApi } from '../api';
@@ -18,10 +20,13 @@ import { yuleApi } from '../api';
 export const LoginView: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
-  const { loginWithToken, isLoading, error } = useYuleStore();
+  const { register, loginWithToken, isLoading, error } = useYuleStore();
 
+  const [tab, setTab] = useState<number>(0); // 0 = Registre, 1 = Login Magic Link
+  const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [sentMessage, setSentMessage] = useState<string | null>(null);
+  const [localError, setLocalError] = useState<string | null>(null);
   const [isVerifying, setIsVerifying] = useState(false);
 
   // Detecció automàtica de Magic Link a la URL (?token=...)
@@ -38,25 +43,27 @@ export const LoginView: React.FC = () => {
     }
   }, [searchParams, loginWithToken, navigate]);
 
+  const handleRegisterSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !email.trim()) return;
+
+    setLocalError(null);
+    const ok = await register(name.trim(), email.trim());
+    if (ok) {
+      navigate('/');
+    }
+  };
+
   const handleRequestMagicLink = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!email.trim()) return;
 
+    setLocalError(null);
     try {
       const res = await yuleApi.requestMagicLink(email.trim());
       setSentMessage(res.data.message);
     } catch {
-      alert("Aquest correu no està registrat al grup familiar.");
-    }
-  };
-
-  // Accés ràpid de simulació per desenvolupament/test
-  const handleSimulateQuickLogin = async (userEmail: string) => {
-    try {
-      await yuleApi.requestMagicLink(userEmail);
-      setSentMessage(`Sol·licitat accés per a ${userEmail}. Comprova el terminal del backend o el token generat.`);
-    } catch {
-      alert("Error en l'accés ràpid.");
+      setLocalError("Aquest correu no consta registrat al grup familiar. Si ets nou, fes servir la pestanya 'Registra't'.");
     }
   };
 
@@ -72,7 +79,7 @@ export const LoginView: React.FC = () => {
   }
 
   return (
-    <Container maxWidth="xs" sx={{ mt: { xs: 4, md: 8 } }}>
+    <Container maxWidth="xs" sx={{ mt: { xs: 4, md: 8 }, mb: 6 }}>
       <Box sx={{ textAlign: 'center', mb: 3 }}>
         <Typography variant="h2" sx={{ fontSize: '48px', mb: 1 }}>
           🎄
@@ -93,39 +100,65 @@ export const LoginView: React.FC = () => {
         </Typography>
       </Box>
 
-      <Card sx={{ p: 3.5, border: '1.5px solid #d4af37' }}>
-        <Typography
-          variant="h6"
-          sx={{
-            fontFamily: "'Cinzel', serif",
-            fontWeight: 700,
-            color: '#143226',
-            mb: 1,
-            textAlign: 'center',
+      <Card sx={{ p: { xs: 2.5, sm: 3.5 }, border: '1.5px solid #d4af37', borderRadius: 3 }}>
+        <Tabs
+          value={tab}
+          onChange={(_, newVal) => {
+            setTab(newVal);
+            setSentMessage(null);
+            setLocalError(null);
           }}
+          variant="fullWidth"
+          sx={{ mb: 3, borderBottom: 1, borderColor: 'divider' }}
         >
-          Accés sense contrasenya
-        </Typography>
-        <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 3 }}>
-          Escriu el teu correu i rebràs un enllaç màgic per entrar amb 1 sol clic.
-        </Typography>
+          <Tab
+            label="Registra't 🎁"
+            sx={{ fontWeight: 700, fontFamily: "'Cinzel', serif" }}
+          />
+          <Tab
+            label="Ja tens compte 🔑"
+            sx={{ fontWeight: 700, fontFamily: "'Cinzel', serif" }}
+          />
+        </Tabs>
 
-        {error && (
+        {(error || localError) && (
           <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
-            {error}
+            {error || localError}
           </Alert>
         )}
 
-        {sentMessage ? (
-          <Alert severity="success" sx={{ borderRadius: 2 }}>
-            {sentMessage}
-          </Alert>
-        ) : (
-          <Box component="form" onSubmit={handleRequestMagicLink}>
+        {tab === 0 ? (
+          // FORMULARI DE REGISTRE
+          <Box component="form" onSubmit={handleRegisterSubmit}>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                color: '#143226',
+                mb: 0.5,
+                textAlign: 'center',
+              }}
+            >
+              Uneix-te a l'Amic Invisible
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 2.5 }}>
+              Afegeix el teu nom i correu per participar al sorteig de Nadal.
+            </Typography>
+
+            <TextField
+              label="El teu nom o sobrenom"
+              placeholder="ex: Maria, Avi Jordi, Marc..."
+              fullWidth
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              required
+              sx={{ mb: 2 }}
+            />
+
             <TextField
               label="El teu correu electrònic"
               type="email"
-              placeholder="ex: monica@familia.cat"
+              placeholder="ex: maria@familia.cat"
               fullWidth
               value={email}
               onChange={(e) => setEmail(e.target.value)}
@@ -139,47 +172,64 @@ export const LoginView: React.FC = () => {
               color="primary"
               fullWidth
               size="large"
-              endIcon={<SendIcon />}
-              disabled={isLoading || !email.trim()}
-              sx={{ py: 1.5, fontSize: '15px' }}
+              startIcon={<HowToRegIcon />}
+              disabled={isLoading || !name.trim() || !email.trim()}
+              sx={{ py: 1.5, fontSize: '15px', fontWeight: 700 }}
             >
-              Rebre enllaç al meu correu ✉️
+              Unir-me a l'Amic Invisible 🎄
             </Button>
           </Box>
+        ) : (
+          // FORMULARI DE LOGIN PER MAGIC LINK
+          <Box>
+            <Typography
+              variant="subtitle1"
+              sx={{
+                fontWeight: 700,
+                color: '#143226',
+                mb: 0.5,
+                textAlign: 'center',
+              }}
+            >
+              Accés per Magic Link
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ textAlign: 'center', mb: 2.5 }}>
+              Escriu el teu correu i rebràs un enllaç directe per entrar amb 1 sol clic.
+            </Typography>
+
+            {sentMessage ? (
+              <Alert severity="success" sx={{ borderRadius: 2, mb: 2 }}>
+                {sentMessage}
+              </Alert>
+            ) : (
+              <Box component="form" onSubmit={handleRequestMagicLink}>
+                <TextField
+                  label="El teu correu electrònic registrat"
+                  type="email"
+                  placeholder="ex: maria@familia.cat"
+                  fullWidth
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  required
+                  sx={{ mb: 2.5 }}
+                />
+
+                <Button
+                  type="submit"
+                  variant="contained"
+                  color="primary"
+                  fullWidth
+                  size="large"
+                  endIcon={<SendIcon />}
+                  disabled={isLoading || !email.trim()}
+                  sx={{ py: 1.5, fontSize: '15px', fontWeight: 700 }}
+                >
+                  Rebre enllaç al correu ✉️
+                </Button>
+              </Box>
+            )}
+          </Box>
         )}
-
-        <Divider sx={{ my: 3 }} />
-
-        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', textAlign: 'center', mb: 1.5 }}>
-          💡 Accés ràpid per a proves de la família:
-        </Typography>
-
-        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => handleSimulateQuickLogin('pau@familia.cat')}
-            sx={{ fontSize: '12px', color: '#1b4332' }}
-          >
-            👑 Pau (Administrador)
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => handleSimulateQuickLogin('monica@familia.cat')}
-            sx={{ fontSize: '12px', color: '#1b4332' }}
-          >
-            👤 Mònica (Familiar)
-          </Button>
-          <Button
-            variant="outlined"
-            size="small"
-            onClick={() => handleSimulateQuickLogin('jordi.avi@familia.cat')}
-            sx={{ fontSize: '12px', color: '#1b4332' }}
-          >
-            👴 Jordi Avi (Familiar)
-          </Button>
-        </Box>
       </Card>
     </Container>
   );

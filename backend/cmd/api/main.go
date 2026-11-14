@@ -101,6 +101,7 @@ func main() {
 		// Rutes públiques
 		api.POST("/auth/magic-link", authHandler.RequestMagicLink)
 		api.POST("/auth/verify", authHandler.VerifyMagicLink)
+		api.POST("/auth/register", authHandler.Register)
 
 		// Rutes autenticades per a qualsevol membre
 		authGroup := api.Group("")

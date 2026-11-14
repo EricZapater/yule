@@ -52,6 +52,22 @@ func (h *Handler) VerifyMagicLink(c *gin.Context) {
 	c.JSON(http.StatusOK, session)
 }
 
+func (h *Handler) Register(c *gin.Context) {
+	var input RegisterInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		shared.RespondError(c, http.StatusBadRequest, "BAD_REQUEST", "Cal indicar el teu nom i un correu electrònic vàlid")
+		return
+	}
+
+	session, err := h.service.Register(input.Name, input.Email)
+	if err != nil {
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error registrant el membre")
+		return
+	}
+
+	c.JSON(http.StatusCreated, session)
+}
+
 func (h *Handler) GetMe(c *gin.Context) {
 	userID, exists := c.Get(shared.ContextUserID)
 	if !exists {

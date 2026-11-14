@@ -26,8 +26,10 @@ import CasinoIcon from '@mui/icons-material/Casino';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LockIcon from '@mui/icons-material/Lock';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import MailOutlineIcon from '@mui/icons-material/MailOutline';
 import { useNavigate } from 'react-router-dom';
 import { useYuleStore } from '../store';
+import { yuleApi } from '../api';
 
 export const AdminDashboardView: React.FC = () => {
   const navigate = useNavigate();
@@ -56,6 +58,15 @@ export const AdminDashboardView: React.FC = () => {
   const handleCopyWhatsApp = (name: string, url: string) => {
     navigator.clipboard.writeText(url);
     setToastMessage(`Enllaç màgic de ${name} copiat al porta-retalls! Ja el pots enviar per WhatsApp.`);
+  };
+
+  const handleResendEmail = async (email: string, name: string) => {
+    try {
+      await yuleApi.requestMagicLink(email);
+      setToastMessage(`S'ha reenviat el Magic Link per correu a ${name} (${email})!`);
+    } catch {
+      setToastMessage(`No s'ha pogut reenviar el correu a ${email}.`);
+    }
   };
 
   const handleInviteSubmit = async (e: React.FormEvent) => {
@@ -274,16 +285,28 @@ export const AdminDashboardView: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell align="right">
-                    <Button
-                      variant="outlined"
-                      color="success"
-                      size="small"
-                      startIcon={<WhatsAppIcon />}
-                      onClick={() => handleCopyWhatsApp(m.name, m.magic_link_url)}
-                      sx={{ fontSize: '12px' }}
-                    >
-                      Copiar WhatsApp
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                      <Button
+                        variant="outlined"
+                        color="primary"
+                        size="small"
+                        startIcon={<MailOutlineIcon />}
+                        onClick={() => handleResendEmail(m.email, m.name)}
+                        sx={{ fontSize: '12px' }}
+                      >
+                        Reenviar Email
+                      </Button>
+                      <Button
+                        variant="outlined"
+                        color="success"
+                        size="small"
+                        startIcon={<WhatsAppIcon />}
+                        onClick={() => handleCopyWhatsApp(m.name, m.magic_link_url)}
+                        sx={{ fontSize: '12px' }}
+                      >
+                        WhatsApp
+                      </Button>
+                    </Box>
                   </TableCell>
                 </TableRow>
               ))}

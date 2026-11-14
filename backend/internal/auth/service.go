@@ -85,6 +85,42 @@ func (s *Service) VerifyMagicLink(token string) (*AuthSessionResponse, error) {
 	}, nil
 }
 
+// Register registra un nou membre (o recupera l'existent) i el connecta directament a l'edició activa.
+func (s *Service) Register(name, email string) (*AuthSessionResponse, error) {
+	if name == "" || email == "" {
+		return nil, errors.New("cal indicar el nom i el correu electrònic")
+	}
+
+	user, err := s.repo.FindUserByEmail(email)
+	if err != nil {
+		return nil, err
+	}
+
+	if user == nil {
+		newID := uuid.New().String()
+		user, err = s.repo.CreateUser(newID, name, email, "member")
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	// Associar a l'edició activa
+	editionID, err := s.repo.GetActiveEditionID()
+	if err == nil && editionID != "" {
+		_ = s.repo.AttachToEdition(editionID, user.ID)
+	}
+
+	jwtToken, err := shared.GenerateJWT(user.ID, user.Email, user.Role)
+	if err != nil {
+		return nil, err
+	}
+
+	return &AuthSessionResponse{
+		Token: jwtToken,
+		User:  *user,
+	}, nil
+}
+
 // GetUserByID retorna l'usuari a partir del seu identificador.
 func (s *Service) GetUserByID(id string) (*User, error) {
 	return s.repo.FindUserByID(id)
