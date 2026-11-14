@@ -1,0 +1,16 @@
+backend/internal/auth/service.go
+  h_42175f19913982 24,99-100,102,104,106-107
+backend/internal/mailer/mailer.go
+  h_42175f19913982 22-50,52-53,57-58,60,62,72,74,87,93,164,166,171,173,183-191,193-202,204-205,207,209-233,237-251
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "d313823d1bbefc5a55986c5c39b69bd8ec4f4941",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
