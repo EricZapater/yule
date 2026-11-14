@@ -1,0 +1,62 @@
+.agent/backend-agent.md
+  h_42175f19913982 1-85
+.agent/frontend-agent.md
+  h_42175f19913982 1-91
+.agent/infra-agent.md
+  h_42175f19913982 1-128
+.agent/mobile-agent.md
+  h_42175f19913982 1-106
+.agent/mockup-agent.md
+  h_42175f19913982 1-104
+.agent/orchestrator.md
+  h_42175f19913982 1-116
+.agent/qa-agent.md
+  h_42175f19913982 1-180
+.agent/security-agent.md
+  h_42175f19913982 1-190
+.agent/ux-agent.md
+  h_42175f19913982 1-135
+CHANGELOG.md
+  h_42175f19913982 1-13
+VERSION
+  h_42175f19913982 1
+constitution.md
+  h_42175f19913982 1-382
+contracts/amic-invisible.openapi.yaml
+  h_42175f19913982 1-775
+mockups/amic-invisible/admin-dashboard-mobile.html
+  h_42175f19913982 1-426
+mockups/amic-invisible/admin-dashboard-web.html
+  h_42175f19913982 1-433
+mockups/amic-invisible/admin-incompatibilities-mobile.html
+  h_42175f19913982 1-403
+mockups/amic-invisible/admin-incompatibilities-web.html
+  h_42175f19913982 1-411
+mockups/amic-invisible/email-assignment-preview.html
+  h_42175f19913982 1-184
+mockups/amic-invisible/member-gift-assigned-mobile.html
+  h_42175f19913982 1-389
+mockups/amic-invisible/member-gift-assigned-web.html
+  h_42175f19913982 1-369
+mockups/amic-invisible/member-wishlist-mobile.html
+  h_42175f19913982 1-399
+mockups/amic-invisible/member-wishlist-web.html
+  h_42175f19913982 1-398
+mockups/approvals.md
+  h_42175f19913982 1-13
+product-functional-spec.md
+  h_42175f19913982 1-108
+specs/amic-invisible.md
+  h_42175f19913982 1-114
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "3118098c06396adfb518675bd53ce8ef002a3f9b",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
