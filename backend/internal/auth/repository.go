@@ -15,7 +15,12 @@ func NewRepository(db *sql.DB) *Repository {
 }
 
 func (r *Repository) FindUserByEmail(email string) (*User, error) {
-	query := `SELECT id, name, email, role, created_at, updated_at FROM users WHERE LOWER(email) = LOWER($1) LIMIT 1`
+	query := `
+		SELECT id, name, email, role, COALESCE(created_at, NOW()), COALESCE(updated_at, NOW())
+		FROM users 
+		WHERE LOWER(TRIM(email)) = LOWER(TRIM($1)) 
+		LIMIT 1
+	`
 	var u User
 	err := r.db.QueryRow(query, email).Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.CreatedAt, &u.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {

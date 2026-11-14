@@ -62,8 +62,16 @@ export const LoginView: React.FC = () => {
     try {
       const res = await yuleApi.requestMagicLink(email.trim());
       setSentMessage(res.data.message);
-    } catch {
-      setLocalError("Aquest correu no consta registrat al grup familiar. Si ets nou, fes servir la pestanya 'Registra't'.");
+    } catch (err: any) {
+      const errMsg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        (err.response?.status === 404
+          ? "Aquest correu no consta registrat al grup familiar. Si ets nou, fes servir la pestanya 'Registra't'."
+          : err.message
+          ? `Error de connexió: ${err.message}`
+          : "Error sol·licitant l'enllaç màgic.");
+      setLocalError(errMsg);
     }
   };
 

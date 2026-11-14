@@ -5,6 +5,7 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
+	"log"
 	"os"
 	"strings"
 	"time"
@@ -29,8 +30,11 @@ func NewService(repo *Repository) *Service {
 // RequestMagicLink genera un token d'un sol ús i simula/envia el correu.
 func (s *Service) RequestMagicLink(rawEmail string) (string, error) {
 	email := strings.ToLower(strings.TrimSpace(rawEmail))
+	log.Printf("📩 Sol·licitud de Magic Link per a: '%s'", email)
+
 	user, err := s.repo.FindUserByEmail(email)
 	if err != nil {
+		log.Printf("❌ Error cercant usuari '%s': %v", email, err)
 		return "", err
 	}
 
@@ -38,6 +42,7 @@ func (s *Service) RequestMagicLink(rawEmail string) (string, error) {
 	if user == nil {
 		adminEnvEmail := strings.ToLower(strings.TrimSpace(os.Getenv("ADMIN_EMAIL")))
 		count, _ := s.repo.CountUsers()
+		log.Printf("ℹ️ Usuari '%s' no trobat. (ADMIN_EMAIL configurat='%s', total_usuaris=%d)", email, adminEnvEmail, count)
 
 		// Cas 1: L'email és el de l'ADMIN_EMAIL configurat a l'entorn
 		// Cas 2: És el primer usuari que intenta entrar al sistema
@@ -49,16 +54,19 @@ func (s *Service) RequestMagicLink(rawEmail string) (string, error) {
 			newID := uuid.New().String()
 			user, err = s.repo.CreateUser(newID, adminName, email, "admin")
 			if err != nil {
+				log.Printf("❌ Error creant usuari admin automàtic: %v", err)
 				return "", fmt.Errorf("error creant usuari admin automàtic: %w", err)
 			}
 			editionID, _ := s.repo.GetActiveEditionID()
 			if editionID != "" {
 				_ = s.repo.AttachToEdition(editionID, user.ID)
 			}
-			fmt.Printf("👑 Usuari administrador creat automàticament per accés inicial (%s <%s>)\n", adminName, email)
+			log.Printf("👑 Usuari administrador creat automàticament (%s <%s>)", adminName, email)
 		} else {
 			return "", ErrUserNotFound
 		}
+	} else {
+		log.Printf("👤 Usuari trobat: id=%s, nom=%s, rol=%s", user.ID, user.Name, user.Role)
 	}
 
 	bytes := make([]byte, 16)
@@ -70,6 +78,7 @@ func (s *Service) RequestMagicLink(rawEmail string) (string, error) {
 
 	linkID := uuid.New().String()
 	if err := s.repo.CreateMagicLink(linkID, user.ID, token, expiresAt); err != nil {
+		log.Printf("❌ Error guardant Magic Link a la BD: %v", err)
 		return "", err
 	}
 
@@ -78,7 +87,8 @@ func (s *Service) RequestMagicLink(rawEmail string) (string, error) {
 		baseURL = "https://yule.ericzapater.cat"
 	}
 
-	fmt.Printf("📧 [CORREU YULE] Enllaç màgic per a %s: %s/login?token=%s\n", user.Email, baseURL, token)
+	magicURL := fmt.Sprintf("%s/login?token=%s", baseURL, token)
+	log.Printf("📧 [CORREU YULE] Enllaç màgic per a %s (%s): %s", user.Name, user.Email, magicURL)
 
 	return token, nil
 }
