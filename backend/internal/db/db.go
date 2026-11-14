@@ -3,6 +3,8 @@ package db
 import (
 	"database/sql"
 	"fmt"
+	"log"
+	"net/url"
 	"os"
 	"time"
 
@@ -33,10 +35,30 @@ func Connect(dsn string) (*sql.DB, error) {
 				if ssl == "" {
 					ssl = "disable"
 				}
-				dsn = fmt.Sprintf("postgres://%s:%s@%s:%s/%s?sslmode=%s", user, pass, host, port, name, ssl)
+
+				log.Printf("🔌 Connectant a PostgreSQL a %s:%s (bd: %s, usuari: %s)...", host, port, name, user)
+
+				var userInfo *url.Userinfo
+				if pass != "" {
+					userInfo = url.UserPassword(user, pass)
+				} else {
+					userInfo = url.User(user)
+				}
+
+				u := &url.URL{
+					Scheme:   "postgres",
+					User:     userInfo,
+					Host:     fmt.Sprintf("%s:%s", host, port),
+					Path:     name,
+					RawQuery: fmt.Sprintf("sslmode=%s", ssl),
+				}
+				dsn = u.String()
 			} else {
+				log.Println("🔌 Cap configuració trobada (ni DATABASE_URL ni DB_HOST); provant localhost:5432...")
 				dsn = "postgres://postgres:postgres@localhost:5432/yule?sslmode=disable"
 			}
+		} else {
+			log.Println("🔌 Connectant a PostgreSQL mitjançant DATABASE_URL...")
 		}
 	}
 

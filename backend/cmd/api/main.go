@@ -26,12 +26,7 @@ func main() {
 		port = "8080"
 	}
 
-	databaseURL := os.Getenv("DATABASE_URL")
-	if databaseURL == "" {
-		databaseURL = "postgres://postgres:postgres@localhost:5432/yule?sslmode=disable"
-	}
-
-	conn, err := db.Connect(databaseURL)
+	conn, err := db.Connect(os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Printf("⚠️ Avís: No s'ha pogut connectar a PostgreSQL (%v).", err)
 		log.Printf("💡 Pots engegar postgres amb Docker: docker run --name yule-pg -e POSTGRES_PASSWORD=postgres -e POSTGRES_DB=yule -p 5432:5432 -d postgres:16-alpine")
