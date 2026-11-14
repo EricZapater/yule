@@ -10,8 +10,8 @@ services:
     volumes:
       - yule_photos:/app/uploads/photos
     networks:
-      - postgres-network
-      - web
+      - db
+      - proxy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.yule-backend.rule=Host(`api.yule.ericzapater.cat`)"
@@ -19,7 +19,7 @@ services:
       - "traefik.http.routers.yule-backend.tls.certresolver=letsencrypt"
       - "traefik.http.routers.yule-backend.service=yule-backend"
       - "traefik.http.services.yule-backend.loadbalancer.server.port=8080"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=proxy"
 
   yule-frontend:
     image: ghcr.io/${GITHUB_REPOSITORY_OWNER:-ericzapater}/yule-frontend:latest
@@ -28,7 +28,7 @@ services:
     env_file:
       - .env.frontend
     networks:
-      - web
+      - proxy
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.yule-frontend.rule=Host(`yule.ericzapater.cat`)"
@@ -36,14 +36,14 @@ services:
       - "traefik.http.routers.yule-frontend.tls.certresolver=letsencrypt"
       - "traefik.http.routers.yule-frontend.service=yule-frontend"
       - "traefik.http.services.yule-frontend.loadbalancer.server.port=80"
-      - "traefik.docker.network=web"
+      - "traefik.docker.network=proxy"
 
 volumes:
   yule_photos:
     name: yule_photos
 
 networks:
-  web:
+  proxy:
     external: true
-  postgres-network:
+  db:
     external: true
