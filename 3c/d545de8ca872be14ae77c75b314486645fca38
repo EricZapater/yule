@@ -1,0 +1,22 @@
+backend/internal/upload/handler.go
+  h_42175f19913982 33-34
+frontend/nginx.conf
+  h_42175f19913982 4,11
+frontend/src/api/client.ts
+  h_42175f19913982 16-19
+frontend/src/modules/amic-invisibles/api.ts
+  h_42175f19913982 64-65
+frontend/src/modules/amic-invisibles/views/WishlistView.tsx
+  h_42175f19913982 21-78,106-107,111,114-121,124-126
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "3cd545de8ca872be14ae77c75b314486645fca38",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
