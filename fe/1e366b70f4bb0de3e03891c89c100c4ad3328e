@@ -1,0 +1,34 @@
+backend/cmd/api/main.go
+  h_42175f19913982 119
+backend/internal/wishlist/handler.go
+  h_42175f19913982 5,113-131
+backend/internal/wishlist/repository.go
+  h_42175f19913982 82-116
+backend/internal/wishlist/service.go
+  h_42175f19913982 56-63
+contracts/amic-invisible.openapi.yaml
+  h_42175f19913982 326-346
+frontend/src/modules/amic-invisibles/api.ts
+  h_42175f19913982 51-52
+frontend/src/modules/amic-invisibles/store.ts
+  h_42175f19913982 30,32,126-140,150-166
+frontend/src/modules/amic-invisibles/types.ts
+  h_42175f19913982 15
+frontend/src/modules/amic-invisibles/views/AdminDashboardView.tsx
+  h_42175f19913982 23-24,32-35,51,58-63,71-89,113,118-123,127,129,133-150,152,165,169-232,235,237-252,254-269,271,273-277,288-323,347-376,379-400,406,417-418,420,427-429,434,481-524,533,538,543,550,552-553
+frontend/src/modules/amic-invisibles/views/GiftAssignedView.tsx
+  h_42175f19913982 55-57
+frontend/src/modules/amic-invisibles/views/WishlistView.tsx
+  h_42175f19913982 29,38,83-92,94,114,124-125,129-152,155-164,204
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "fe1e366b70f4bb0de3e03891c89c100c4ad3328e",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
