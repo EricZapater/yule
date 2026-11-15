@@ -190,3 +190,13 @@ func (s *Service) GetMyAssignment(userID string) (*AssignmentResponse, error) {
 func (s *Service) MarkItemPurchased(userID, itemID string, isPurchased bool) error {
 	return s.repo.MarkItemPurchased(userID, itemID, isPurchased)
 }
+
+// ResetDraw elimina els resultats del sorteig actiu i torna a obrir les llistes de desitjos.
+func (s *Service) ResetDraw() error {
+	currentEd, err := s.editionService.GetCurrentEdition()
+	if err != nil {
+		return err
+	}
+	return s.repo.ResetAssignmentsTransactional(currentEd.ID)
+}
+

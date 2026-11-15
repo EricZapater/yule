@@ -37,6 +37,7 @@ interface YuleState {
     copy_members?: boolean;
   }) => Promise<boolean>;
   updateEdition: (data: { name?: string; budget_limit?: number }) => Promise<boolean>;
+  deleteEdition: (id: string) => Promise<boolean>;
   fetchMyWishlist: () => Promise<void>;
   copyPreviousWishlist: () => Promise<number>;
   addWishlistItem: (data: {
@@ -59,6 +60,7 @@ interface YuleState {
   ) => Promise<boolean>;
   deleteIncompatibility: (id: string) => Promise<void>;
   executeDraw: () => Promise<boolean>;
+  resetDraw: () => Promise<boolean>;
   notifyDraw: () => Promise<number>;
 }
 
@@ -180,6 +182,24 @@ export const useYuleStore = create<YuleState>((set, get) => ({
       set({
         isLoading: false,
         error: err.response?.data?.error || "Error actualitzant l'edició",
+      });
+      return false;
+    }
+  },
+
+  deleteEdition: async (id: string) => {
+    try {
+      set({ isLoading: true, error: null });
+      await yuleApi.deleteEdition(id);
+      await get().fetchEditions();
+      await get().fetchEdition();
+      await get().fetchAdminData();
+      set({ isLoading: false });
+      return true;
+    } catch (err: any) {
+      set({
+        isLoading: false,
+        error: err.response?.data?.error || "Error eliminant el sorteig",
       });
       return false;
     }
@@ -332,6 +352,20 @@ export const useYuleStore = create<YuleState>((set, get) => ({
     try {
       set({ isLoading: true });
       await yuleApi.executeDraw();
+      await get().fetchEdition();
+      await get().fetchAdminData();
+      set({ isLoading: false });
+      return true;
+    } catch {
+      set({ isLoading: false });
+      return false;
+    }
+  },
+
+  resetDraw: async () => {
+    try {
+      set({ isLoading: true });
+      await yuleApi.resetDraw();
       await get().fetchEdition();
       await get().fetchAdminData();
       set({ isLoading: false });

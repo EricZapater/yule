@@ -101,3 +101,8 @@ func (r *Repository) UpdateEdition(id string, name string, budgetLimit float64) 
 	}
 	return &ed, nil
 }
+
+func (r *Repository) DeleteEdition(id string) error {
+	_, err := r.db.Exec(`DELETE FROM editions WHERE id = $1`, id)
+	return err
+}

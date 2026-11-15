@@ -100,3 +100,15 @@ func (h *Handler) MarkItemPurchased(c *gin.Context) {
 		"is_purchased": input.IsPurchased,
 	})
 }
+
+func (h *Handler) ResetDraw(c *gin.Context) {
+	if err := h.service.ResetDraw(); err != nil {
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error esborrant els resultats del sorteig: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message": "Resultats del sorteig esborrats correctament. Les llistes tornen a estar obertes.",
+	})
+}
+

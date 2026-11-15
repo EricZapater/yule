@@ -36,6 +36,8 @@ import EditIcon from '@mui/icons-material/Edit';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import DeleteIcon from '@mui/icons-material/Delete';
+import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import { useNavigate } from 'react-router-dom';
 import { useYuleStore } from '../store';
 import { yuleApi } from '../api';
@@ -55,6 +57,8 @@ export const AdminDashboardView: React.FC = () => {
     createMember,
     createEdition,
     updateEdition,
+    deleteEdition,
+    resetDraw,
     executeDraw,
     notifyDraw,
   } = useYuleStore();
@@ -192,6 +196,26 @@ export const AdminDashboardView: React.FC = () => {
     }
   };
 
+  const handleResetDraw = async () => {
+    if (!window.confirm("Segur que vols esborrar els resultats del sorteig? Les parelles secretes s'eliminaran i les llistes tornaran a quedar obertes.")) return;
+    const ok = await resetDraw();
+    if (ok) {
+      setToastMessage("🔄 S'han esborrat els resultats del sorteig. Les llistes tornen a estar obertes!");
+    } else {
+      alert("No s'han pogut esborrar els resultats del sorteig.");
+    }
+  };
+
+  const handleDeleteEdition = async (id: string, name: string) => {
+    if (!window.confirm(`Segur que vols eliminar completament el sorteig "${name}"? S'esborraran tots els seus membres, llistes i dades associades.`)) return;
+    const ok = await deleteEdition(id);
+    if (ok) {
+      setToastMessage(`🗑️ Sorteig "${name}" eliminat correctament.`);
+    } else {
+      alert("No s'ha pogut eliminar el sorteig.");
+    }
+  };
+
   const formatDate = (dateStr?: string | null) => {
     if (!dateStr) return 'Pendent';
     const d = new Date(dateStr);
@@ -285,6 +309,18 @@ export const AdminDashboardView: React.FC = () => {
             >
               Nou Sorteig
             </Button>
+            {editions.length > 1 && currentEdition && (
+              <Button
+                variant="outlined"
+                color="error"
+                size="small"
+                startIcon={<DeleteIcon />}
+                onClick={() => handleDeleteEdition(currentEdition.id, currentEdition.name)}
+                sx={{ fontWeight: 600, fontSize: '12px' }}
+              >
+                Eliminar Sorteig
+              </Button>
+            )}
           </Box>
         </Box>
 
@@ -299,12 +335,18 @@ export const AdminDashboardView: React.FC = () => {
                 label={`${ed.name} (${ed.year})`}
                 size="small"
                 variant={ed.id === currentEdition?.id ? 'filled' : 'outlined'}
+                onDelete={() => handleDeleteEdition(ed.id, ed.name)}
+                deleteIcon={<DeleteIcon style={{ fontSize: '14px' }} />}
                 sx={{
                   fontSize: '11px',
                   fontWeight: ed.id === currentEdition?.id ? 700 : 500,
                   bgcolor: ed.id === currentEdition?.id ? '#1b4332' : 'transparent',
                   color: ed.id === currentEdition?.id ? '#fff' : '#495057',
                   borderColor: '#ebd8b2',
+                  '& .MuiChip-deleteIcon': {
+                    color: ed.id === currentEdition?.id ? '#ffcdd2' : '#d32f2f',
+                    '&:hover': { color: '#ff1744' },
+                  },
                 }}
               />
             ))}
@@ -444,27 +486,49 @@ export const AdminDashboardView: React.FC = () => {
             </Button>
 
             {currentEdition?.status === 'drawn' && (
-              <Button
-                variant="outlined"
-                color="primary"
-                size="medium"
-                fullWidth
-                startIcon={<MailOutlineIcon />}
-                onClick={handleResendDrawEmails}
-                disabled={isLoading}
-                sx={{
-                  mt: 1.5,
-                  py: 1.2,
-                  fontSize: '14px',
-                  fontWeight: 700,
-                  borderColor: '#1b4332',
-                  color: '#1b4332',
-                  bgcolor: '#ffffff',
-                  '&:hover': { bgcolor: '#eef5f1', borderColor: '#1b4332' },
-                }}
-              >
-                Reenviar avisos del sorteig per correu 📨
-              </Button>
+              <>
+                <Button
+                  variant="outlined"
+                  color="primary"
+                  size="medium"
+                  fullWidth
+                  startIcon={<MailOutlineIcon />}
+                  onClick={handleResendDrawEmails}
+                  disabled={isLoading}
+                  sx={{
+                    mt: 1.5,
+                    py: 1.2,
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    borderColor: '#1b4332',
+                    color: '#1b4332',
+                    bgcolor: '#ffffff',
+                    '&:hover': { bgcolor: '#eef5f1', borderColor: '#1b4332' },
+                  }}
+                >
+                  Reenviar avisos del sorteig per correu 📨
+                </Button>
+
+                <Button
+                  variant="outlined"
+                  color="error"
+                  size="medium"
+                  fullWidth
+                  startIcon={<RestartAltIcon />}
+                  onClick={handleResetDraw}
+                  disabled={isLoading}
+                  sx={{
+                    mt: 1.5,
+                    py: 1.2,
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    bgcolor: '#ffffff',
+                    '&:hover': { bgcolor: '#fdf2f2' },
+                  }}
+                >
+                  Esborrar resultats del sorteig 🔄
+                </Button>
+              </>
             )}
           </Card>
         </Grid>

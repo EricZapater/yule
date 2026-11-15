@@ -217,3 +217,35 @@ func (r *Repository) MarkItemPurchased(giverID, itemID string, isPurchased bool)
 	_, err := r.db.Exec(query, giverID, itemID, isPurchased)
 	return err
 }
+
+// ResetAssignmentsTransactional elimina les parelles assignades i les compres marcades, i restableix l'estat a wishlists_open.
+func (r *Repository) ResetAssignmentsTransactional(editionID string) error {
+	tx, err := r.db.Begin()
+	if err != nil {
+		return err
+	}
+	defer tx.Rollback()
+
+	// 1. Eliminar compres d'aquesta edició
+	deletePurchased := `
+		DELETE FROM purchased_items 
+		WHERE item_id IN (SELECT id FROM wishlist_items WHERE edition_id = $1)
+	`
+	if _, err := tx.Exec(deletePurchased, editionID); err != nil {
+		return err
+	}
+
+	// 2. Eliminar assignacions de l'edició
+	if _, err := tx.Exec(`DELETE FROM assignments WHERE edition_id = $1`, editionID); err != nil {
+		return err
+	}
+
+	// 3. Restablir l'edició
+	resetEdition := `UPDATE editions SET status = 'wishlists_open', drawn_at = NULL WHERE id = $1`
+	if _, err := tx.Exec(resetEdition, editionID); err != nil {
+		return err
+	}
+
+	return tx.Commit()
+}
+

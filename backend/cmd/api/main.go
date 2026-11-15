@@ -130,6 +130,7 @@ func main() {
 				adminGroup.GET("/editions", editionHandler.ListEditions)
 				adminGroup.POST("/editions", editionHandler.CreateEdition)
 				adminGroup.PUT("/editions/current", editionHandler.UpdateCurrentEdition)
+				adminGroup.DELETE("/editions/:id", editionHandler.DeleteEdition)
 
 				adminGroup.GET("/members", memberHandler.ListMembers)
 				adminGroup.POST("/members", memberHandler.CreateMember)
@@ -141,6 +142,7 @@ func main() {
 				adminGroup.GET("/incompatibilities/check-viability", incompHandler.CheckViability)
 
 				adminGroup.POST("/draw", drawHandler.ExecuteDraw)
+				adminGroup.DELETE("/draw", drawHandler.ResetDraw)
 				adminGroup.POST("/draw/notify", drawHandler.NotifyAssignments)
 			}
 		}

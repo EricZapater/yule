@@ -42,3 +42,7 @@ func (s *Service) UpdateCurrentEdition(input UpdateEditionInput) (*Edition, erro
 
 	return s.repo.UpdateEdition(current.ID, name, budget)
 }
+
+func (s *Service) DeleteEdition(id string) error {
+	return s.repo.DeleteEdition(id)
+}

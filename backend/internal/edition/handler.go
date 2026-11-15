@@ -70,3 +70,18 @@ func (h *Handler) UpdateCurrentEdition(c *gin.Context) {
 	}
 	c.JSON(http.StatusOK, ed)
 }
+
+func (h *Handler) DeleteEdition(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		shared.RespondError(c, http.StatusBadRequest, "BAD_REQUEST", "Identificador requerit")
+		return
+	}
+
+	if err := h.service.DeleteEdition(id); err != nil {
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error eliminant el sorteig: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Sorteig eliminat correctament"})
+}

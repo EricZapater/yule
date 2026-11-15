@@ -33,6 +33,8 @@ export const yuleApi = {
   }) => apiClient.post<Edition>('/editions', data),
   updateCurrentEdition: (data: { name?: string; budget_limit?: number }) =>
     apiClient.put<Edition>('/editions/current', data),
+  deleteEdition: (id: string) =>
+    apiClient.delete<{ message: string }>(`/editions/${id}`),
 
   // Wishlist
   getMyWishlist: () => apiClient.get<WishlistItem[]>('/wishlist'),
@@ -97,5 +99,6 @@ export const yuleApi = {
 
   // Execute Draw
   executeDraw: () => apiClient.post('/draw'),
+  resetDraw: () => apiClient.delete<{ message: string }>('/draw'),
   notifyDraw: () => apiClient.post<{ message: string; dispatched: number }>('/draw/notify'),
 };
