@@ -129,6 +129,31 @@ func (r *Repository) GetEditionAssignments(editionID string) ([]AssignmentResult
 	return list, nil
 }
 
+// GetEditionWishlists retorna tots els desitjos de l'edició agrupats per user_id.
+func (r *Repository) GetEditionWishlists(editionID string) (map[string][]wishlist.WishlistItem, error) {
+	query := `
+		SELECT id, edition_id, user_id, title, price_estimated, url, image_url, notes, created_at
+		FROM wishlist_items
+		WHERE edition_id = $1
+		ORDER BY created_at ASC
+	`
+	rows, err := r.db.Query(query, editionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	result := make(map[string][]wishlist.WishlistItem)
+	for rows.Next() {
+		var it wishlist.WishlistItem
+		if err := rows.Scan(&it.ID, &it.EditionID, &it.UserID, &it.Title, &it.PriceEstimated, &it.URL, &it.ImageURL, &it.Notes, &it.CreatedAt); err != nil {
+			return nil, err
+		}
+		result[it.UserID] = append(result[it.UserID], it)
+	}
+	return result, nil
+}
+
 // GetMyAssignment retorna el receptor assignat i els seus articles de desitjos (i l'estat marcat pel regalador).
 func (r *Repository) GetMyAssignment(editionID, giverID string) (*RecipientSummary, []AssignedWishlistItem, error) {
 	var recipient RecipientSummary

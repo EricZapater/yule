@@ -137,8 +137,16 @@ func (m *Mailer) SendMagicLink(toEmail, toName, magicLinkURL string) error {
 	return m.sendEmail(toEmail, subject, htmlBody)
 }
 
-// SendDrawNotification envia el correu festiu revelant qui és la persona assignada a l'amic invisible.
-func (m *Mailer) SendDrawNotification(toEmail, giverName, receiverName, editionName string, budgetLimit float64, appURL string) error {
+type EmailWishlistItem struct {
+	Title          string
+	PriceEstimated *float64
+	URL            *string
+	ImageURL       *string
+	Notes          *string
+}
+
+// SendDrawNotification envia el correu festiu revelant qui és la persona assignada a l'amic invisible i la seva llista de desitjos.
+func (m *Mailer) SendDrawNotification(toEmail, giverName, receiverName, editionName string, budgetLimit float64, appURL string, items []EmailWishlistItem) error {
 	if !m.IsConfigured() {
 		return fmt.Errorf("SMTP no està configurat")
 	}
@@ -153,6 +161,63 @@ func (m *Mailer) SendDrawNotification(toEmail, giverName, receiverName, editionN
           <span style="font-size: 13px; color: #6d4e00; font-weight: bold; text-transform: uppercase;">Pressupost màxim orientatiu:</span>
           <div style="font-size: 20px; font-weight: 800; color: #1b4332; margin-top: 4px;">%.2f €</div>
         </div>`, budgetLimit)
+	}
+
+	var wishlistHTML strings.Builder
+	if len(items) == 0 {
+		wishlistHTML.WriteString(fmt.Sprintf(`
+    <div style="background: #faf8f5; border: 1px dashed #d4af37; border-radius: 8px; padding: 16px; margin: 20px 0; text-align: center;">
+      <p style="margin: 0; color: #6b7280; font-size: 14px;">
+        ⏳ En/Na <strong>%s</strong> encara no ha afegit desitjos a la seva llista.<br>
+        Pots consultar l'enllaç més endavant per veure les seves noves idees!
+      </p>
+    </div>`, receiverName))
+	} else {
+		wishlistHTML.WriteString(fmt.Sprintf(`
+    <div style="margin: 24px 0;">
+      <h3 style="color: #1b4332; font-size: 17px; margin-bottom: 12px; border-bottom: 2px solid #ebd8b2; padding-bottom: 6px;">
+        🎁 Llista de desitjos de %s (%d):
+      </h3>`, receiverName, len(items)))
+
+		for i, item := range items {
+			priceBadge := ""
+			if item.PriceEstimated != nil && *item.PriceEstimated > 0 {
+				priceBadge = fmt.Sprintf(`<span style="background: #eef5f1; color: #1b4332; font-size: 12px; font-weight: bold; padding: 2px 8px; border-radius: 4px; margin-left: 8px;">%.2f €</span>`, *item.PriceEstimated)
+			}
+
+			notesHTML := ""
+			if item.Notes != nil && strings.TrimSpace(*item.Notes) != "" {
+				notesHTML = fmt.Sprintf(`<div style="margin-top: 4px; font-size: 13px; color: #4b5563; font-style: italic;">📝 %s</div>`, *item.Notes)
+			}
+
+			urlHTML := ""
+			if item.URL != nil && strings.TrimSpace(*item.URL) != "" {
+				urlHTML = fmt.Sprintf(`<div style="margin-top: 6px;"><a href="%s" target="_blank" style="font-size: 13px; color: #1b4332; text-decoration: underline; font-weight: 600;">🔗 Veure a la botiga web</a></div>`, *item.URL)
+			}
+
+			imgHTML := ""
+			if item.ImageURL != nil && strings.TrimSpace(*item.ImageURL) != "" {
+				imgSrc := *item.ImageURL
+				if strings.HasPrefix(imgSrc, "/") {
+					imgSrc = strings.TrimRight(appURL, "/") + imgSrc
+				}
+				imgHTML = fmt.Sprintf(`<div style="margin-top: 8px;"><img src="%s" alt="%s" style="max-width: 180px; max-height: 180px; border-radius: 6px; border: 1px solid #e5e7eb; display: block; object-fit: cover;" /></div>`, imgSrc, item.Title)
+			}
+
+			wishlistHTML.WriteString(fmt.Sprintf(`
+      <div style="background: #ffffff; border: 1px solid #e5e7eb; border-left: 4px solid #1b4332; border-radius: 6px; padding: 12px 14px; margin-bottom: 10px;">
+        <div style="display: flex; align-items: baseline;">
+          <span style="font-size: 14px; font-weight: bold; color: #6b7280; margin-right: 6px;">#%d</span>
+          <span style="font-size: 15px; font-weight: bold; color: #1f2937;">%s</span>
+          %s
+        </div>
+        %s
+        %s
+        %s
+      </div>`, i+1, item.Title, priceBadge, notesHTML, urlHTML, imgHTML))
+		}
+
+		wishlistHTML.WriteString(`</div>`)
 	}
 
 	subject := fmt.Sprintf("🎁 Ja saps a qui regales! Sorteig celebrat (%s)", editionName)
@@ -189,10 +254,12 @@ func (m *Mailer) SendDrawNotification(toEmail, giverName, receiverName, editionN
 
     %s
 
-    <p>Pots consultar la seva <strong>llista de desitjos, idees i fotos</strong> directament a l'aplicació per encertar amb el regal:</p>
+    %s
+
+    <p style="text-align: center; margin-top: 24px;">Pots entrar a l'aplicació per consultar la seva llista actualitzada i marcar els regals que ja hagis comprat:</p>
     
     <div style="text-align: center;">
-      <a href="%s" class="btn">Veure la llista de desitjos de %s 🎁</a>
+      <a href="%s" class="btn">Entrar a Yule Amic Invisible ✨</a>
     </div>
 
     <div class="footer">
@@ -201,7 +268,7 @@ func (m *Mailer) SendDrawNotification(toEmail, giverName, receiverName, editionN
     </div>
   </div>
 </body>
-</html>`, editionName, giverName, receiverName, budgetInfo, appURL, receiverName)
+</html>`, editionName, giverName, receiverName, budgetInfo, wishlistHTML.String(), appURL)
 
 	return m.sendEmail(toEmail, subject, htmlBody)
 }

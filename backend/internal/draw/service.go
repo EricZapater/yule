@@ -5,6 +5,8 @@ import (
 	"log"
 	"os"
 	"yule/backend/internal/edition"
+	"yule/backend/internal/mailer"
+	"yule/backend/internal/wishlist"
 )
 
 var (
@@ -12,7 +14,7 @@ var (
 )
 
 type Mailer interface {
-	SendDrawNotification(toEmail, giverName, receiverName, editionName string, budgetLimit float64, appURL string) error
+	SendDrawNotification(toEmail, giverName, receiverName, editionName string, budgetLimit float64, appURL string, items []mailer.EmailWishlistItem) error
 	IsConfigured() bool
 }
 
@@ -112,6 +114,12 @@ func (s *Service) dispatchNotifications(currentEd *edition.Edition, participants
 		baseURL = "https://yule.ericzapater.cat"
 	}
 
+	wishlists, err := s.repo.GetEditionWishlists(currentEd.ID)
+	if err != nil {
+		log.Printf("⚠️ No s'han pogut carregar les llistes de desitjos per als correus: %v", err)
+		wishlists = make(map[string][]wishlist.WishlistItem)
+	}
+
 	log.Printf("\n📨 [NOTIFICACIONS SORTEIG] Edició %s celebrada amb èxit (%d participants):", currentEd.Name, len(pairs))
 	dispatched := 0
 	for _, pair := range pairs {
@@ -119,18 +127,30 @@ func (s *Service) dispatchNotifications(currentEd *edition.Edition, participants
 		giverEmail := emails[pair.GiverID]
 		receiverName := nameByID[pair.ReceiverID]
 
-		log.Printf("  • A %s (%s): T'ha tocat fer el regal a %s! 🎁", giverName, giverEmail, receiverName)
+		receiverWishes := wishlists[pair.ReceiverID]
+		var emailWishes []mailer.EmailWishlistItem
+		for _, w := range receiverWishes {
+			emailWishes = append(emailWishes, mailer.EmailWishlistItem{
+				Title:          w.Title,
+				PriceEstimated: w.PriceEstimated,
+				URL:            w.URL,
+				ImageURL:       w.ImageURL,
+				Notes:          w.Notes,
+			})
+		}
+
+		log.Printf("  • A %s (%s): T'ha tocat fer el regal a %s! 🎁 (Té %d desitjos a la llista)", giverName, giverEmail, receiverName, len(emailWishes))
 
 		if s.mailer != nil && s.mailer.IsConfigured() && giverEmail != "" {
 			dispatched++
-			go func(toEmail, gName, rName string) {
-				log.Printf("🚀 Enviant correu de sorteig a %s (%s)...", gName, toEmail)
-				if err := s.mailer.SendDrawNotification(toEmail, gName, rName, currentEd.Name, currentEd.BudgetLimit, baseURL); err != nil {
+			go func(toEmail, gName, rName string, wishes []mailer.EmailWishlistItem) {
+				log.Printf("🚀 Enviant correu de sorteig a %s (%s) amb %d desitjos...", gName, toEmail, len(wishes))
+				if err := s.mailer.SendDrawNotification(toEmail, gName, rName, currentEd.Name, currentEd.BudgetLimit, baseURL, wishes); err != nil {
 					log.Printf("❌ ERROR enviant correu de sorteig a %s: %v", toEmail, err)
 				} else {
 					log.Printf("✅ Correu de sorteig enviat amb èxit a %s", toEmail)
 				}
-			}(giverEmail, giverName, receiverName)
+			}(giverEmail, giverName, receiverName, emailWishes)
 		} else {
 			if s.mailer == nil || !s.mailer.IsConfigured() {
 				log.Printf("ℹ️ [SENSE SMTP] El servidor no té SMTP configurat. El correu per a %s no s'ha enviat.", giverEmail)
