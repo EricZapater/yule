@@ -18,3 +18,10 @@ type UpdateEditionInput struct {
 	Name        *string  `json:"name"`
 	BudgetLimit *float64 `json:"budget_limit"`
 }
+
+type CreateEditionInput struct {
+	Year        int     `json:"year" binding:"required"`
+	Name        string  `json:"name" binding:"required"`
+	BudgetLimit float64 `json:"budget_limit"`
+	CopyMembers bool    `json:"copy_members"`
+}

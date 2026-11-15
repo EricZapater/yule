@@ -123,8 +123,60 @@ paths:
 
 
   # ---------------------------------------------------------------------------
-  # EDITIONS (EDICIÓ ANUAL)
+  # EDITIONS (EDICIÓ ANUAL / MESTRE DE SORTEJOS)
   # ---------------------------------------------------------------------------
+  /editions:
+    get:
+      summary: (Admin) Llistar tots els sortejos / edicions de la família
+      operationId: listEditions
+      responses:
+        '200':
+          description: Llistat de tots els sortejos històrics i actuals
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Edition'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+    post:
+      summary: (Admin) Crear un nou sorteig / edició mestra
+      operationId: createEdition
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [year, name]
+              properties:
+                year:
+                  type: integer
+                  example: 2027
+                name:
+                  type: string
+                  example: "Nadal 2027"
+                budget_limit:
+                  type: number
+                  format: float
+                  example: 35.00
+                copy_members:
+                  type: boolean
+                  default: true
+                  example: true
+      responses:
+        '201':
+          description: Nou sorteig creat amb èxit
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Edition'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /editions/current:
     get:
       summary: Obtenir les dades de l'edició activa de Nadal

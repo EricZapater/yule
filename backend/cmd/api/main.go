@@ -127,6 +127,8 @@ func main() {
 			adminGroup := authGroup.Group("")
 			adminGroup.Use(shared.RequireAdmin())
 			{
+				adminGroup.GET("/editions", editionHandler.ListEditions)
+				adminGroup.POST("/editions", editionHandler.CreateEdition)
 				adminGroup.PUT("/editions/current", editionHandler.UpdateCurrentEdition)
 
 				adminGroup.GET("/members", memberHandler.ListMembers)

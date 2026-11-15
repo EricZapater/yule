@@ -12,6 +12,18 @@ func (s *Service) GetCurrentEdition() (*Edition, error) {
 	return s.repo.GetOrCreateCurrentEdition()
 }
 
+func (s *Service) ListEditions() ([]Edition, error) {
+	return s.repo.ListEditions()
+}
+
+func (s *Service) CreateEdition(input CreateEditionInput) (*Edition, error) {
+	budget := input.BudgetLimit
+	if budget <= 0 {
+		budget = 30.0
+	}
+	return s.repo.CreateEdition(input.Year, input.Name, budget, input.CopyMembers)
+}
+
 func (s *Service) UpdateCurrentEdition(input UpdateEditionInput) (*Edition, error) {
 	current, err := s.repo.GetOrCreateCurrentEdition()
 	if err != nil {

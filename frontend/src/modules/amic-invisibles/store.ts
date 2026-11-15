@@ -13,6 +13,7 @@ import { yuleApi } from './api';
 interface YuleState {
   currentUser: User | null;
   currentEdition: Edition | null;
+  editions: Edition[];
   myWishlist: WishlistItem[];
   assignment: AssignmentResponse | null;
   members: MemberAdminView[];
@@ -27,6 +28,13 @@ interface YuleState {
   logout: () => void;
   fetchMe: () => Promise<void>;
   fetchEdition: () => Promise<void>;
+  fetchEditions: () => Promise<void>;
+  createEdition: (data: {
+    year: number;
+    name: string;
+    budget_limit?: number;
+    copy_members?: boolean;
+  }) => Promise<boolean>;
   updateEdition: (data: { name?: string; budget_limit?: number }) => Promise<boolean>;
   fetchMyWishlist: () => Promise<void>;
   copyPreviousWishlist: () => Promise<number>;
@@ -55,6 +63,7 @@ interface YuleState {
 export const useYuleStore = create<YuleState>((set, get) => ({
   currentUser: JSON.parse(localStorage.getItem('yule_user_profile') || 'null'),
   currentEdition: null,
+  editions: [],
   myWishlist: [],
   assignment: null,
   members: [],
@@ -120,6 +129,41 @@ export const useYuleStore = create<YuleState>((set, get) => ({
       set({ currentEdition: res.data });
     } catch {
       // Error silent
+    }
+  },
+
+  fetchEditions: async () => {
+    try {
+      const res = await yuleApi.listEditions();
+      set({ editions: res.data });
+    } catch {
+      // Error silent
+    }
+  },
+
+  createEdition: async (data: {
+    year: number;
+    name: string;
+    budget_limit?: number;
+    copy_members?: boolean;
+  }) => {
+    try {
+      set({ isLoading: true, error: null });
+      const res = await yuleApi.createEdition(data);
+      // Actualitzar l'edició activa i la llista d'edicions
+      set((state) => ({
+        currentEdition: res.data,
+        editions: [res.data, ...state.editions],
+        isLoading: false,
+      }));
+      await get().fetchAdminData();
+      return true;
+    } catch (err: any) {
+      set({
+        isLoading: false,
+        error: err.response?.data?.error || "Error creant el nou sorteig",
+      });
+      return false;
     }
   },
 

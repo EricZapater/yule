@@ -24,6 +24,30 @@ func (h *Handler) GetCurrentEdition(c *gin.Context) {
 	c.JSON(http.StatusOK, ed)
 }
 
+func (h *Handler) ListEditions(c *gin.Context) {
+	editions, err := h.service.ListEditions()
+	if err != nil {
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error obtenint els sortejos")
+		return
+	}
+	c.JSON(http.StatusOK, editions)
+}
+
+func (h *Handler) CreateEdition(c *gin.Context) {
+	var input CreateEditionInput
+	if err := c.ShouldBindJSON(&input); err != nil {
+		shared.RespondError(c, http.StatusBadRequest, "BAD_REQUEST", "Dades del nou sorteig incorrectes")
+		return
+	}
+
+	ed, err := h.service.CreateEdition(input)
+	if err != nil {
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error creant el nou sorteig")
+		return
+	}
+	c.JSON(http.StatusCreated, ed)
+}
+
 func (h *Handler) UpdateCurrentEdition(c *gin.Context) {
 	var input UpdateEditionInput
 	if err := c.ShouldBindJSON(&input); err != nil {

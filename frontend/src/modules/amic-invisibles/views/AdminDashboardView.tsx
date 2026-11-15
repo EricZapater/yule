@@ -22,7 +22,10 @@ import {
   Grid,
   IconButton,
   Divider,
+  FormControlLabel,
+  Checkbox,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import CasinoIcon from '@mui/icons-material/Casino';
 import PersonAddIcon from '@mui/icons-material/PersonAdd';
@@ -41,13 +44,16 @@ export const AdminDashboardView: React.FC = () => {
   const navigate = useNavigate();
   const {
     currentEdition,
+    editions,
     members,
     incompatibilities,
     viability,
     isLoading,
     fetchEdition,
+    fetchEditions,
     fetchAdminData,
     createMember,
+    createEdition,
     updateEdition,
     executeDraw,
   } = useYuleStore();
@@ -61,12 +67,47 @@ export const AdminDashboardView: React.FC = () => {
   const [editionName, setEditionName] = useState('');
   const [editionBudget, setEditionBudget] = useState('30');
 
+  // Modal de Creació de Nou Sorteig Mestre
+  const [openCreateEditionModal, setOpenCreateEditionModal] = useState(false);
+  const [newEditionYear, setNewEditionYear] = useState('');
+  const [newEditionName, setNewEditionName] = useState('');
+  const [newEditionBudget, setNewEditionBudget] = useState('30');
+  const [newEditionCopyMembers, setNewEditionCopyMembers] = useState(true);
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEdition();
+    fetchEditions();
     fetchAdminData();
-  }, [fetchEdition, fetchAdminData]);
+  }, [fetchEdition, fetchEditions, fetchAdminData]);
+
+  const handleOpenCreateModal = () => {
+    const nextYear = currentEdition?.year ? currentEdition.year + 1 : new Date().getFullYear();
+    setNewEditionYear(nextYear.toString());
+    setNewEditionName(`Nadal ${nextYear}`);
+    setNewEditionBudget(currentEdition?.budget_limit ? currentEdition.budget_limit.toString() : '30');
+    setNewEditionCopyMembers(true);
+    setOpenCreateEditionModal(true);
+  };
+
+  const handleCreateEdition = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const yearNum = parseInt(newEditionYear, 10);
+    if (!yearNum || !newEditionName.trim()) return;
+
+    const budgetNum = parseFloat(newEditionBudget) || 0;
+    const ok = await createEdition({
+      year: yearNum,
+      name: newEditionName.trim(),
+      budget_limit: budgetNum,
+      copy_members: newEditionCopyMembers,
+    });
+    if (ok) {
+      setToastMessage(`🎉 Nou sorteig "${newEditionName}" creat amb èxit!`);
+      setOpenCreateEditionModal(false);
+    }
+  };
 
   const handleOpenEditionModal = () => {
     setEditionName(currentEdition?.name || 'Nadal 2026');
@@ -193,7 +234,7 @@ export const AdminDashboardView: React.FC = () => {
             </IconButton>
           </Box>
 
-          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, flexWrap: 'wrap' }}>
             <Chip
               label={currentEdition?.status === 'drawn' ? '🎉 Sorteig Celebrat' : '⏳ Llistes Obertes'}
               color={currentEdition?.status === 'drawn' ? 'success' : 'warning'}
@@ -208,8 +249,46 @@ export const AdminDashboardView: React.FC = () => {
             >
               Configurar Import i Nom
             </Button>
+            <Button
+              variant="contained"
+              size="small"
+              startIcon={<AddIcon />}
+              onClick={handleOpenCreateModal}
+              sx={{
+                bgcolor: '#1b4332',
+                color: '#ffffff',
+                fontWeight: 700,
+                fontSize: '12px',
+                '&:hover': { bgcolor: '#2d6a4f' },
+              }}
+            >
+              Nou Sorteig
+            </Button>
           </Box>
         </Box>
+
+        {editions.length > 1 && (
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mt: 1, mb: 1, flexWrap: 'wrap' }}>
+            <Typography variant="caption" sx={{ fontWeight: 700, color: '#6d4e00' }}>
+              Historial de sortejos:
+            </Typography>
+            {editions.map((ed) => (
+              <Chip
+                key={ed.id}
+                label={`${ed.name} (${ed.year})`}
+                size="small"
+                variant={ed.id === currentEdition?.id ? 'filled' : 'outlined'}
+                sx={{
+                  fontSize: '11px',
+                  fontWeight: ed.id === currentEdition?.id ? 700 : 500,
+                  bgcolor: ed.id === currentEdition?.id ? '#1b4332' : 'transparent',
+                  color: ed.id === currentEdition?.id ? '#fff' : '#495057',
+                  borderColor: '#ebd8b2',
+                }}
+              />
+            ))}
+          </Box>
+        )}
 
         <Divider sx={{ my: 2 }} />
 
@@ -514,6 +593,82 @@ export const AdminDashboardView: React.FC = () => {
             <Button onClick={() => setOpenEditionModal(false)}>Cancel·lar</Button>
             <Button type="submit" variant="contained" color="primary" disabled={isLoading}>
               Desar canvis
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
+      {/* =========================================================================
+          MODAL: CREAR NOU SORTEIG (MESTRE)
+          ========================================================================= */}
+      <Dialog open={openCreateEditionModal} onClose={() => setOpenCreateEditionModal(false)} maxWidth="xs" fullWidth>
+        <Box component="form" onSubmit={handleCreateEdition}>
+          <DialogTitle sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700, color: '#1b4332' }}>
+            🎄 Crear un Nou Sorteig
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Inicia una nova edició per a la família. Es mantindrà l'historial d'anys anteriors i els familiars podran traspassar els seus desitjos.
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={5}>
+                <TextField
+                  label="Any"
+                  type="number"
+                  fullWidth
+                  required
+                  value={newEditionYear}
+                  onChange={(e) => {
+                    const yr = e.target.value;
+                    setNewEditionYear(yr);
+                    if (newEditionName.startsWith('Nadal ')) {
+                      setNewEditionName(`Nadal ${yr}`);
+                    }
+                  }}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+              <Grid item xs={7}>
+                <TextField
+                  label="Nom de l'Edició"
+                  fullWidth
+                  required
+                  placeholder="ex: Nadal 2027"
+                  value={newEditionName}
+                  onChange={(e) => setNewEditionName(e.target.value)}
+                  sx={{ mb: 2 }}
+                />
+              </Grid>
+            </Grid>
+            <TextField
+              label="Pressupost màxim (€)"
+              type="number"
+              fullWidth
+              placeholder="ex: 30.00 (o 0 si és lliure)"
+              value={newEditionBudget}
+              onChange={(e) => setNewEditionBudget(e.target.value)}
+              helperText="Referència per a la llista de desitjos dels familiars."
+              sx={{ mb: 2 }}
+            />
+            <FormControlLabel
+              control={
+                <Checkbox
+                  checked={newEditionCopyMembers}
+                  onChange={(e) => setNewEditionCopyMembers(e.target.checked)}
+                  color="primary"
+                />
+              }
+              label={
+                <Typography variant="body2">
+                  Vincular automàticament els familiars actuals ({members.length})
+                </Typography>
+              }
+            />
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setOpenCreateEditionModal(false)}>Cancel·lar</Button>
+            <Button type="submit" variant="contained" color="primary" disabled={isLoading}>
+              Crear Sorteig
             </Button>
           </DialogActions>
         </Box>

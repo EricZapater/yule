@@ -24,6 +24,13 @@ export const yuleApi = {
 
   // Edition
   getCurrentEdition: () => apiClient.get<Edition>('/editions/current'),
+  listEditions: () => apiClient.get<Edition[]>('/editions'),
+  createEdition: (data: {
+    year: number;
+    name: string;
+    budget_limit?: number;
+    copy_members?: boolean;
+  }) => apiClient.post<Edition>('/editions', data),
   updateCurrentEdition: (data: { name?: string; budget_limit?: number }) =>
     apiClient.put<Edition>('/editions/current', data),
 
