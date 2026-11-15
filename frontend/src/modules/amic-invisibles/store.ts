@@ -15,6 +15,7 @@ interface YuleState {
   currentEdition: Edition | null;
   editions: Edition[];
   myWishlist: WishlistItem[];
+  isWishlistLoaded: boolean;
   assignment: AssignmentResponse | null;
   members: MemberAdminView[];
   incompatibilities: Incompatibility[];
@@ -65,6 +66,7 @@ export const useYuleStore = create<YuleState>((set, get) => ({
   currentEdition: null,
   editions: [],
   myWishlist: [],
+  isWishlistLoaded: false,
   assignment: null,
   members: [],
   incompatibilities: [],
@@ -109,7 +111,7 @@ export const useYuleStore = create<YuleState>((set, get) => ({
   logout: () => {
     localStorage.removeItem('yule_auth_token');
     localStorage.removeItem('yule_user_profile');
-    set({ currentUser: null, assignment: null, myWishlist: [] });
+    set({ currentUser: null, assignment: null, myWishlist: [], isWishlistLoaded: false });
     window.location.href = '/login';
   },
 
@@ -185,8 +187,9 @@ export const useYuleStore = create<YuleState>((set, get) => ({
   fetchMyWishlist: async () => {
     try {
       const res = await yuleApi.getMyWishlist();
-      set({ myWishlist: res.data });
+      set({ myWishlist: res.data || [], isWishlistLoaded: true });
     } catch {
+      set({ isWishlistLoaded: true });
       // Error silent
     }
   },
@@ -197,7 +200,7 @@ export const useYuleStore = create<YuleState>((set, get) => ({
       const res = await yuleApi.copyPreviousWishlist();
       // Recarregar la llista actualitzada
       const listRes = await yuleApi.getMyWishlist();
-      set({ myWishlist: listRes.data, isLoading: false });
+      set({ myWishlist: listRes.data || [], isWishlistLoaded: true, isLoading: false });
       return res.data.copied;
     } catch (err: any) {
       set({
@@ -214,6 +217,7 @@ export const useYuleStore = create<YuleState>((set, get) => ({
       const res = await yuleApi.addWishlistItem(data);
       set((state) => ({
         myWishlist: [...state.myWishlist, res.data],
+        isWishlistLoaded: true,
         isLoading: false,
       }));
       return true;

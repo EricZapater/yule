@@ -15,15 +15,25 @@ import {
 import ShoppingBagIcon from '@mui/icons-material/ShoppingBag';
 import CheckCircleOutlineIcon from '@mui/icons-material/CheckCircleOutline';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import { useNavigate } from 'react-router-dom';
 import { useYuleStore } from '../store';
 
 export const GiftAssignedView: React.FC = () => {
-  const { assignment, isLoading, fetchAssignment, markItemPurchased } =
-    useYuleStore();
+  const navigate = useNavigate();
+  const {
+    assignment,
+    myWishlist,
+    isWishlistLoaded,
+    isLoading,
+    fetchAssignment,
+    fetchMyWishlist,
+    markItemPurchased,
+  } = useYuleStore();
 
   useEffect(() => {
     fetchAssignment();
-  }, [fetchAssignment]);
+    fetchMyWishlist();
+  }, [fetchAssignment, fetchMyWishlist]);
 
   if (isLoading) {
     return (
@@ -35,8 +45,68 @@ export const GiftAssignedView: React.FC = () => {
 
   if (!assignment) {
     return (
-      <Container maxWidth="md" sx={{ mt: 5, textAlign: 'center' }}>
-        <Card sx={{ p: 4, bgcolor: '#ffffff', border: '2px solid #d4af37' }}>
+      <Container maxWidth="md" sx={{ mt: { xs: 3, md: 5 } }}>
+        {/* Avís si la llista de desitjos està buida */}
+        {isWishlistLoaded && myWishlist.length === 0 && (
+          <Card
+            sx={{
+              mb: 3,
+              p: { xs: 2.5, md: 3.5 },
+              bgcolor: '#fffbf0',
+              border: '2px dashed #b7094c',
+              borderRadius: 3,
+              textAlign: 'center',
+              boxShadow: '0 4px 14px rgba(183, 9, 76, 0.08)',
+            }}
+          >
+            <Typography variant="h6" sx={{ fontFamily: "'Cinzel', serif", color: '#9d0208', fontWeight: 800, mb: 1 }}>
+              ⚠️ Encara no has afegit cap desig a la teva llista!
+            </Typography>
+            <Typography variant="body2" color="text.secondary" sx={{ maxWidth: 540, mx: 'auto', mb: 2.5 }}>
+              Mentre l'administrador prepara el sorteig, és imprescindible que tinguis la teva llista preparada perquè el teu futur amic invisible secret sàpiga què fa més il·lusió.
+            </Typography>
+            <Button
+              variant="contained"
+              onClick={() => navigate('/wishlist')}
+              sx={{
+                bgcolor: '#9d0208',
+                color: '#fff',
+                fontWeight: 700,
+                px: 3.5,
+                py: 1,
+                borderRadius: 2,
+                boxShadow: '0 4px 12px rgba(157, 2, 8, 0.25)',
+                '&:hover': { bgcolor: '#7b0005' },
+              }}
+            >
+              📝 Crear la meva llista de desitjos
+            </Button>
+          </Card>
+        )}
+
+        {isWishlistLoaded && myWishlist.length > 0 && (
+          <Box sx={{ mb: 3, textAlign: 'center' }}>
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 1,
+                bgcolor: '#e8f5e9',
+                px: 2.5,
+                py: 1,
+                borderRadius: 2,
+                border: '1px solid #c8e6c9',
+              }}
+            >
+              <CheckCircleOutlineIcon sx={{ color: '#2e7d32', fontSize: 20 }} />
+              <Typography variant="body2" sx={{ color: '#2e7d32', fontWeight: 600 }}>
+                Ja tens {myWishlist.length} {myWishlist.length === 1 ? 'regal afegit' : 'regals afegits'} a la teva llista. Tot a punt pel sorteig!
+              </Typography>
+            </Box>
+          </Box>
+        )}
+
+        <Card sx={{ p: 4, bgcolor: '#ffffff', border: '2px solid #d4af37', textAlign: 'center', borderRadius: 3 }}>
           <Typography variant="h3" sx={{ mb: 2 }}>
             ⏳
           </Typography>
@@ -63,6 +133,26 @@ export const GiftAssignedView: React.FC = () => {
 
   return (
     <Container maxWidth="md" sx={{ mt: { xs: 2.5, md: 4 } }}>
+      {/* Avís si el sorteig s'ha celebrat però l'usuari no té llista */}
+      {isWishlistLoaded && myWishlist.length === 0 && (
+        <Alert
+          severity="warning"
+          sx={{ mb: 3, borderRadius: 2, border: '1px solid #ffeeba' }}
+          action={
+            <Button
+              color="inherit"
+              size="small"
+              onClick={() => navigate('/wishlist')}
+              sx={{ fontWeight: 700 }}
+            >
+              Afegir desitjos
+            </Button>
+          }
+        >
+          <strong>Recordatori:</strong> Encara no has afegit la teva llista de regals! El teu amic invisible secret no sabrà què regalar-te.
+        </Alert>
+      )}
+
       {/* Targeta Festiva de Revelació */}
       <Card
         sx={{

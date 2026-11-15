@@ -12,6 +12,7 @@ import {
   Grid,
 } from '@mui/material';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import CloseIcon from '@mui/icons-material/Close';
 import { useYuleStore } from '../store';
@@ -219,11 +220,10 @@ export const WishlistView: React.FC = () => {
             </Grid>
           </Grid>
 
-          {/* Càmera / Pujada de fotos */}
+          {/* Càmera / Galeria / Pujada de fotos */}
           <input
             type="file"
             accept="image/*"
-            capture="environment"
             ref={fileInputRef}
             style={{ display: 'none' }}
             onChange={handleFileChange}
@@ -240,23 +240,26 @@ export const WishlistView: React.FC = () => {
                 bgcolor: '#faf8f5',
                 cursor: 'pointer',
                 mb: 2,
-                transition: 'background 0.2s',
-                '&:hover': { bgcolor: '#f4eee3' },
+                transition: 'all 0.2s',
+                '&:hover': { bgcolor: '#f4eee3', borderColor: '#b7094c' },
               }}
             >
               {isUploading ? (
                 <CircularProgress size={28} sx={{ color: '#1b4332' }} />
               ) : (
                 <>
-                  <PhotoCameraIcon sx={{ fontSize: 36, color: '#1b4332', mb: 0.5 }} />
+                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                    <PhotoCameraIcon sx={{ fontSize: 32, color: '#1b4332' }} />
+                    <AddPhotoAlternateIcon sx={{ fontSize: 32, color: '#d4af37' }} />
+                  </Box>
                   <Typography
                     variant="subtitle2"
                     sx={{ fontWeight: 700, color: '#1b4332' }}
                   >
-                    Fes una foto amb el mòbil o tria un fitxer
+                    Fes una foto o adjunta-la des de la galeria
                   </Typography>
                   <Typography variant="caption" color="text.secondary">
-                    Ideal per ensenyar el que has vist en aparadors o revistes
+                    Tria una imatge des de la teva galeria o fes una foto amb la càmera
                   </Typography>
                 </>
               )}

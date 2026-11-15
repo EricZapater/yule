@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   AppBar,
   Toolbar,
@@ -27,7 +27,19 @@ export const AppNavigation: React.FC<{ children: React.ReactNode }> = ({
   const navigate = useNavigate();
   const location = useLocation();
 
-  const { currentUser, logout } = useYuleStore();
+  const {
+    currentUser,
+    myWishlist,
+    isWishlistLoaded,
+    fetchMyWishlist,
+    fetchEdition,
+    logout,
+  } = useYuleStore();
+
+  useEffect(() => {
+    fetchMyWishlist();
+    fetchEdition();
+  }, [fetchMyWishlist, fetchEdition]);
 
   const currentTab = (() => {
     if (location.pathname.startsWith('/wishlist')) return '/wishlist';
@@ -140,6 +152,55 @@ export const AppNavigation: React.FC<{ children: React.ReactNode }> = ({
           </Box>
         </Toolbar>
       </AppBar>
+
+      {/* Avís: Llista de desitjos buida pel sorteig actiu */}
+      {isWishlistLoaded && myWishlist.length === 0 && !location.pathname.startsWith('/wishlist') && (
+        <Box
+          sx={{
+            background: 'linear-gradient(90deg, #fff3cd 0%, #fef8e7 100%)',
+            borderBottom: '2px solid #e0c870',
+            px: { xs: 2, md: 4 },
+            py: 1.5,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'space-between',
+            flexWrap: 'wrap',
+            gap: 1.5,
+            boxShadow: '0 2px 8px rgba(0,0,0,0.06)',
+          }}
+        >
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5, flex: 1, minWidth: '260px' }}>
+            <Typography sx={{ fontSize: '24px' }}>🎁</Typography>
+            <Box>
+              <Typography variant="subtitle2" sx={{ fontWeight: 800, color: '#855904', lineHeight: 1.3 }}>
+                Avís: Encara no has afegit cap desig a la teva llista de regals!
+              </Typography>
+              <Typography variant="caption" sx={{ color: '#6d4803', display: 'block' }}>
+                Perquè el teu amic invisible sàpiga què regalar-te, afegeix idees o fotos pel sorteig d'aquest any.
+              </Typography>
+            </Box>
+          </Box>
+          <Button
+            size="small"
+            variant="contained"
+            onClick={() => navigate('/wishlist')}
+            sx={{
+              bgcolor: '#9d0208',
+              color: '#ffffff',
+              fontWeight: 700,
+              fontSize: '13px',
+              px: 2.5,
+              py: 0.75,
+              borderRadius: 2,
+              whiteSpace: 'nowrap',
+              boxShadow: '0 2px 6px rgba(157, 2, 8, 0.3)',
+              '&:hover': { bgcolor: '#7b0005' },
+            }}
+          >
+            ✨ Omplir la meva llista
+          </Button>
+        </Box>
+      )}
 
       {/* Main Content Area */}
       <Box sx={{ flex: 1, pb: isMobile ? '80px' : 4 }}>{children}</Box>
