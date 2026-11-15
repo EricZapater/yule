@@ -1,0 +1,20 @@
+frontend/src/modules/amic-invisibles/components/AppNavigation.tsx
+  h_42175f19913982 1,30-42,156-204
+frontend/src/modules/amic-invisibles/store.ts
+  h_42175f19913982 18,69,114,190,192,203,220
+frontend/src/modules/amic-invisibles/views/GiftAssignedView.tsx
+  h_42175f19913982 18,22-31,35-36,48-109,136-155
+frontend/src/modules/amic-invisibles/views/WishlistView.tsx
+  h_42175f19913982 15,223,243-244,251-254,259,262
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "9f0452ea6495794512b3ddd93a9a75cf3ad2d4b7",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
