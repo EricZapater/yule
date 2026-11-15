@@ -1,0 +1,30 @@
+backend/cmd/api/main.go
+  h_42175f19913982 71,144
+backend/internal/draw/handler.go
+  h_42175f19913982 37-53
+backend/internal/draw/repository.go
+  h_42175f19913982 112-131
+backend/internal/draw/service.go
+  h_42175f19913982 5-6,14-18,23,26,31,68-104,110-117,122-140
+backend/internal/mailer/mailer.go
+  h_42175f19913982 140-208
+contracts/amic-invisible.openapi.yaml
+  h_42175f19913982 554-578
+frontend/src/modules/amic-invisibles/api.ts
+  h_42175f19913982 100
+frontend/src/modules/amic-invisibles/store.ts
+  h_42175f19913982 62,344-355
+frontend/src/modules/amic-invisibles/views/AdminDashboardView.tsx
+  h_42175f19913982 59,169,175-184,435-458
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "59c3b0f3e7667723525689f920cf3992a5974037",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
