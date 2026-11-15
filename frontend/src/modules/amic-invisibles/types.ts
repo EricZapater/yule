@@ -12,6 +12,7 @@ export interface Edition {
   budget_limit: number;
   status: 'draft' | 'wishlists_open' | 'drawn' | 'closed';
   drawn_at: string | null;
+  created_at?: string;
 }
 
 export interface WishlistItem {

@@ -53,3 +53,11 @@ func (s *Service) UpdateItem(itemID, userID string, req CreateWishlistItemReques
 func (s *Service) DeleteItem(itemID, userID string) error {
 	return s.repo.DeleteItem(itemID, userID)
 }
+
+func (s *Service) CopyPreviousWishlist(userID string) (int, error) {
+	currentEd, err := s.editionService.GetCurrentEdition()
+	if err != nil {
+		return 0, err
+	}
+	return s.repo.CopyPreviousWishlist(currentEd.ID, userID)
+}

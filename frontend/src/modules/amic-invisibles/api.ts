@@ -48,6 +48,8 @@ export const yuleApi = {
   ) => apiClient.put<WishlistItem>(`/wishlist/${itemId}`, data),
   deleteWishlistItem: (itemId: string) =>
     apiClient.delete(`/wishlist/${itemId}`),
+  copyPreviousWishlist: () =>
+    apiClient.post<{ copied: number; message: string }>('/wishlist/copy-previous'),
 
   // Upload photo
   uploadPhoto: (file: File) => {

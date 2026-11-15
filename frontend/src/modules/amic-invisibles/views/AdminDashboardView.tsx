@@ -20,6 +20,8 @@ import {
   Snackbar,
   Alert,
   Grid,
+  IconButton,
+  Divider,
 } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import CasinoIcon from '@mui/icons-material/Casino';
@@ -27,6 +29,10 @@ import PersonAddIcon from '@mui/icons-material/PersonAdd';
 import LockIcon from '@mui/icons-material/Lock';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import MailOutlineIcon from '@mui/icons-material/MailOutline';
+import EditIcon from '@mui/icons-material/Edit';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import { useNavigate } from 'react-router-dom';
 import { useYuleStore } from '../store';
 import { yuleApi } from '../api';
@@ -42,18 +48,44 @@ export const AdminDashboardView: React.FC = () => {
     fetchEdition,
     fetchAdminData,
     createMember,
+    updateEdition,
     executeDraw,
   } = useYuleStore();
 
   const [openInviteModal, setOpenInviteModal] = useState(false);
   const [newMemberName, setNewMemberName] = useState('');
   const [newMemberEmail, setNewMemberEmail] = useState('');
+
+  // Modal d'Edició del Mestre de Sorteig
+  const [openEditionModal, setOpenEditionModal] = useState(false);
+  const [editionName, setEditionName] = useState('');
+  const [editionBudget, setEditionBudget] = useState('30');
+
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
   useEffect(() => {
     fetchEdition();
     fetchAdminData();
   }, [fetchEdition, fetchAdminData]);
+
+  const handleOpenEditionModal = () => {
+    setEditionName(currentEdition?.name || 'Nadal 2026');
+    setEditionBudget(currentEdition?.budget_limit?.toString() || '30');
+    setOpenEditionModal(true);
+  };
+
+  const handleSaveEdition = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const budgetNum = parseFloat(editionBudget) || 0;
+    const ok = await updateEdition({
+      name: editionName.trim(),
+      budget_limit: budgetNum,
+    });
+    if (ok) {
+      setToastMessage('Paràmetres del sorteig actualitzats amb èxit! ✨');
+      setOpenEditionModal(false);
+    }
+  };
 
   const handleCopyWhatsApp = (name: string, url: string) => {
     navigator.clipboard.writeText(url);
@@ -78,27 +110,46 @@ export const AdminDashboardView: React.FC = () => {
       setNewMemberName('');
       setNewMemberEmail('');
       setOpenInviteModal(false);
-      setToastMessage('Familiar convidat correctament!');
-    } else {
-      alert("Error registrant familiar. Comprova que el correu no estigui repetit.");
+      setToastMessage('Familiar afegit al cens de la família correctament!');
     }
   };
 
   const handleTriggerDraw = async () => {
-    if (!window.confirm("Segur que vols executar el sorteig? S'assignaran les parelles secrets i tothom podrà veure el seu amic invisible.")) {
-      return;
-    }
+    const isRedo = currentEdition?.status === 'drawn';
+    const confirmMsg = isRedo
+      ? 'Segur que vols REPETIR el sorteig? Es generaran noves parelles secretes i es substituiran les actuals.'
+      : 'Vols celebrar el sorteig ara? Cada familiar veurà el seu amic invisible i rebrà el correu si està configurat.';
+
+    if (!window.confirm(confirmMsg)) return;
 
     const ok = await executeDraw();
     if (ok) {
-      setToastMessage('🎉 El sorteig s’ha executat amb èxit! Notificacions enviades.');
+      setToastMessage('🎉 El sorteig s’ha executat amb èxit! Tothom ja té el seu amic invisible assignat.');
     } else {
-      alert("No s'ha pogut executar el sorteig. Comprova que hi hagi un mínim de 3 membres i que les incompatibilitats siguin viables.");
+      alert("No s'ha pogut executar el sorteig. Comprova que hi hagi un mínim de 3 membres i que les regles siguin viables.");
     }
   };
 
+  const formatDate = (dateStr?: string | null) => {
+    if (!dateStr) return 'Pendent';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('ca-ES', { day: '2-digit', month: '2-digit', year: 'numeric' });
+  };
+
+  const formatDateTime = (dateStr?: string | null) => {
+    if (!dateStr) return 'Pendent de celebració';
+    const d = new Date(dateStr);
+    return d.toLocaleDateString('ca-ES', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  };
+
   return (
-    <Container maxWidth="lg" sx={{ mt: { xs: 2.5, md: 4 } }}>
+    <Container maxWidth="lg" sx={{ mt: { xs: 2.5, md: 4 }, mb: 8 }}>
       <Box sx={{ mb: 3 }}>
         <Typography
           variant="h4"
@@ -111,63 +162,119 @@ export const AdminDashboardView: React.FC = () => {
           PANELL D'ADMINISTRACIÓ
         </Typography>
         <Typography color="text.secondary">
-          Gestió del cens familiar, exclusions d'incompatibilitat i llançament del sorteig.
+          Estructura del sorteig de la família: paràmetres mestres, assignacions i llistes de desitjos.
         </Typography>
       </Box>
 
-      {/* Fila superior: Resum + Estat Viabilitat */}
-      <Grid container spacing={3} sx={{ mb: 4 }}>
-        <Grid item xs={12} md={7}>
-          <Card sx={{ p: 3, height: '100%' }}>
-            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-              <Typography variant="h5" sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>
-                {currentEdition?.name || 'Nadal 2026'}
+      {/* =========================================================================
+          MESTRE: DADES DEL SORTEIG (EDICIÓ)
+          ========================================================================= */}
+      <Card
+        sx={{
+          mb: 4,
+          p: { xs: 2.5, md: 3.5 },
+          border: '2px solid #d4af37',
+          background: 'radial-gradient(circle at 100% 0%, #fffdf8 0%, #ffffff 80%)',
+          borderRadius: 3,
+        }}
+      >
+        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+            <Typography variant="h5" sx={{ fontFamily: "'Cinzel', serif", fontWeight: 800, color: '#143226' }}>
+              🎄 {currentEdition?.name || 'Nadal 2026'}
+            </Typography>
+            <IconButton
+              size="small"
+              onClick={handleOpenEditionModal}
+              title="Configurar dades del sorteig"
+              sx={{ color: '#d4af37' }}
+            >
+              <EditIcon fontSize="small" />
+            </IconButton>
+          </Box>
+
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <Chip
+              label={currentEdition?.status === 'drawn' ? '🎉 Sorteig Celebrat' : '⏳ Llistes Obertes'}
+              color={currentEdition?.status === 'drawn' ? 'success' : 'warning'}
+              sx={{ fontWeight: 700 }}
+            />
+            <Button
+              variant="outlined"
+              size="small"
+              startIcon={<EditIcon />}
+              onClick={handleOpenEditionModal}
+              sx={{ borderColor: '#d4af37', color: '#7a5300', fontWeight: 600, fontSize: '12px' }}
+            >
+              Configurar Import i Nom
+            </Button>
+          </Box>
+        </Box>
+
+        <Divider sx={{ my: 2 }} />
+
+        {/* Metadades del Mestre: Data creació, Data celebració, Import màxim */}
+        <Grid container spacing={2.5}>
+          <Grid item xs={12} sm={4}>
+            <Box sx={{ bgcolor: '#faf7f2', p: 2, borderRadius: 2, border: '1px solid #ebd8b2' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                <AttachMoneyIcon sx={{ color: '#d4af37', fontSize: 20 }} />
+                <Typography variant="caption" sx={{ fontWeight: 700, color: '#6d4e00', textTransform: 'uppercase' }}>
+                  Import màxim de regal
+                </Typography>
+              </Box>
+              <Typography variant="h5" sx={{ fontWeight: 800, color: '#1b4332' }}>
+                {currentEdition?.budget_limit && currentEdition.budget_limit > 0
+                  ? `${currentEdition.budget_limit.toFixed(2)} €`
+                  : 'Lliure (Sense límit)'}
               </Typography>
-              <Chip
-                label={currentEdition?.status === 'drawn' ? '🎉 Sortejat' : 'Llistes obertes'}
-                color={currentEdition?.status === 'drawn' ? 'success' : 'warning'}
-                sx={{ fontWeight: 700 }}
-              />
+              <Typography variant="caption" color="text.secondary">
+                Configurat per a aquesta edició
+              </Typography>
             </Box>
+          </Grid>
 
-            <Grid container spacing={2}>
-              <Grid item xs={4}>
-                <Box sx={{ bgcolor: '#faf7f2', p: 1.5, borderRadius: 2, textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#1b4332' }}>
-                    {members.length}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Familiars actius
-                  </Typography>
-                </Box>
-              </Grid>
+          <Grid item xs={12} sm={4}>
+            <Box sx={{ bgcolor: '#faf7f2', p: 2, borderRadius: 2, border: '1px solid #ebd8b2' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                <CalendarMonthIcon sx={{ color: '#1b4332', fontSize: 20 }} />
+                <Typography variant="caption" sx={{ fontWeight: 700, color: '#6d4e00', textTransform: 'uppercase' }}>
+                  Data de creació
+                </Typography>
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: '#1b4332' }}>
+                {formatDate(currentEdition?.created_at)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Inici d'inscripcions i llistes
+              </Typography>
+            </Box>
+          </Grid>
 
-              <Grid item xs={4}>
-                <Box sx={{ bgcolor: '#faf7f2', p: 1.5, borderRadius: 2, textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#1b4332' }}>
-                    {currentEdition?.budget_limit.toFixed(0) || '30'} €
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Límit de regal
-                  </Typography>
-                </Box>
-              </Grid>
-
-              <Grid item xs={4}>
-                <Box sx={{ bgcolor: '#faf7f2', p: 1.5, borderRadius: 2, textAlign: 'center' }}>
-                  <Typography variant="h5" sx={{ fontWeight: 800, color: '#1b4332' }}>
-                    {members.filter((m) => m.wishlist_items_count > 0).length} / {members.length}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Amb llista feta
-                  </Typography>
-                </Box>
-              </Grid>
-            </Grid>
-          </Card>
+          <Grid item xs={12} sm={4}>
+            <Box sx={{ bgcolor: '#faf7f2', p: 2, borderRadius: 2, border: '1px solid #ebd8b2' }}>
+              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 0.5 }}>
+                <EventAvailableIcon sx={{ color: currentEdition?.drawn_at ? '#2d6a4f' : '#b7094c', fontSize: 20 }} />
+                <Typography variant="caption" sx={{ fontWeight: 700, color: '#6d4e00', textTransform: 'uppercase' }}>
+                  Data de celebració
+                </Typography>
+              </Box>
+              <Typography variant="h6" sx={{ fontWeight: 700, color: currentEdition?.drawn_at ? '#1b4332' : 'text.secondary' }}>
+                {formatDateTime(currentEdition?.drawn_at)}
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                {currentEdition?.drawn_at ? 'Sorteig finalitzat' : 'Pendent de prémer el botó'}
+              </Typography>
+            </Box>
+          </Grid>
         </Grid>
+      </Card>
 
-        <Grid item xs={12} md={5}>
+      {/* =========================================================================
+          DETALL 1: ASSIGNACIONS I EXECUCIÓ DEL SORTEIG
+          ========================================================================= */}
+      <Grid container spacing={3} sx={{ mb: 4 }}>
+        <Grid item xs={12} md={6}>
           <Card
             sx={{
               p: 3,
@@ -176,37 +283,45 @@ export const AdminDashboardView: React.FC = () => {
               flexDirection: 'column',
               justifyContent: 'space-between',
               border: '1.5px solid #d4af37',
-              background: 'radial-gradient(circle at 100% 0%, #fffdf8 0%, #ffffff 80%)',
             }}
           >
-            <Box
-              onClick={() => navigate('/admin/incompatibilities')}
-              sx={{
-                bgcolor: '#faf4e8',
-                border: '1px solid #ebd8b2',
-                borderRadius: 2,
-                p: 2,
-                cursor: 'pointer',
-                display: 'flex',
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 2,
-                '&:hover': { bgcolor: '#f4ebd8' },
-              }}
-            >
-              <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                <LockIcon sx={{ fontSize: 18, color: '#7a5300' }} />
-                <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#7a5300' }}>
-                  Incompatibilitats ({incompatibilities.length})
-                </Typography>
+            <Box>
+              <Typography variant="h6" sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700, color: '#143226', mb: 1 }}>
+                🎲 Detall d'Assignacions
+              </Typography>
+              <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+                Quan tothom hagi afegit idees, prem el botó per resoldre l'algorisme secret de permutació.
+              </Typography>
+
+              <Box
+                onClick={() => navigate('/admin/incompatibilities')}
+                sx={{
+                  bgcolor: '#faf4e8',
+                  border: '1px solid #ebd8b2',
+                  borderRadius: 2,
+                  p: 2,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  mb: 2,
+                  '&:hover': { bgcolor: '#f4ebd8' },
+                }}
+              >
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                  <LockIcon sx={{ fontSize: 18, color: '#7a5300' }} />
+                  <Typography variant="subtitle2" sx={{ fontWeight: 700, color: '#7a5300' }}>
+                    Regles d'Exclusió Privades ({incompatibilities.length})
+                  </Typography>
+                </Box>
+                <Chip
+                  label={viability?.is_viable ? 'Viable ✅' : 'Inviable ❌'}
+                  color={viability?.is_viable ? 'success' : 'error'}
+                  size="small"
+                  sx={{ fontWeight: 700 }}
+                />
+                <ArrowForwardIosIcon sx={{ fontSize: 14, color: '#7a5300' }} />
               </Box>
-              <Chip
-                label={viability?.is_viable ? 'Viable ✅' : 'Inviable ❌'}
-                color={viability?.is_viable ? 'success' : 'error'}
-                size="small"
-                sx={{ fontWeight: 700 }}
-              />
-              <ArrowForwardIosIcon sx={{ fontSize: 14, color: '#7a5300' }} />
             </Box>
 
             <Button
@@ -229,20 +344,66 @@ export const AdminDashboardView: React.FC = () => {
             </Button>
           </Card>
         </Grid>
+
+        <Grid item xs={12} md={6}>
+          <Card sx={{ p: 3, height: '100%', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 700, color: '#1b4332', mb: 2 }}>
+              📊 Estat dels participants del sorteig
+            </Typography>
+            <Grid container spacing={2}>
+              <Grid item xs={6}>
+                <Box sx={{ bgcolor: '#faf7f2', p: 2, borderRadius: 2, textAlign: 'center' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: '#1b4332' }}>
+                    {members.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Familiars censats
+                  </Typography>
+                </Box>
+              </Grid>
+              <Grid item xs={6}>
+                <Box sx={{ bgcolor: '#faf7f2', p: 2, borderRadius: 2, textAlign: 'center' }}>
+                  <Typography variant="h4" sx={{ fontWeight: 800, color: '#2d6a4f' }}>
+                    {members.filter((m) => m.wishlist_items_count > 0).length} / {members.length}
+                  </Typography>
+                  <Typography variant="body2" color="text.secondary">
+                    Amb llista activa
+                  </Typography>
+                </Box>
+              </Grid>
+            </Grid>
+          </Card>
+        </Grid>
       </Grid>
 
-      {/* Llista del Cens Familiar */}
-      <Card sx={{ p: { xs: 2, md: 3 } }}>
-        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 2 }}>
-          <Typography variant="h6" sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>
-            Família ({members.length} participants)
-          </Typography>
+      {/* =========================================================================
+          DETALL 2: LLISTES DE DESITJOS I CENS DE MEMBRES VINCULATS
+          ========================================================================= */}
+      <Card sx={{ p: { xs: 2, sm: 3 } }}>
+        <Box
+          sx={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            mb: 2.5,
+            flexWrap: 'wrap',
+            gap: 1.5,
+          }}
+        >
+          <Box>
+            <Typography variant="h6" sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>
+              Detall de Membres i Llistes de Desitjos
+            </Typography>
+            <Typography variant="body2" color="text.secondary">
+              Cada membre té la seva llista de desitjos vinculada exclusivament a aquest sorteig.
+            </Typography>
+          </Box>
           <Button
             variant="contained"
             color="primary"
             startIcon={<PersonAddIcon />}
             onClick={() => setOpenInviteModal(true)}
-            size="small"
+            sx={{ fontWeight: 700 }}
           >
             + Convidar familiar
           </Button>
@@ -253,22 +414,24 @@ export const AdminDashboardView: React.FC = () => {
             <TableHead>
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>Familiar</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Correu</TableCell>
-                <TableCell sx={{ fontWeight: 700 }}>Estat Llista</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Correu electrònic</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Desitjos en aquest sorteig</TableCell>
                 <TableCell sx={{ fontWeight: 700 }} align="right">
-                  Accés ràpid
+                  Accions d'accés
                 </TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
               {members.map((m) => (
                 <TableRow key={m.id} hover>
-                  <TableCell sx={{ fontWeight: 700 }}>{m.name}</TableCell>
+                  <TableCell sx={{ fontWeight: 700 }}>
+                    {m.name} {m.role === 'admin' && '👑'}
+                  </TableCell>
                   <TableCell color="text.secondary">{m.email}</TableCell>
                   <TableCell>
                     {m.wishlist_items_count > 0 ? (
                       <Chip
-                        label={`✓ ${m.wishlist_items_count} regals afegits`}
+                        label={`✓ ${m.wishlist_items_count} desitjos afegits`}
                         size="small"
                         color="success"
                         variant="outlined"
@@ -315,7 +478,50 @@ export const AdminDashboardView: React.FC = () => {
         </TableContainer>
       </Card>
 
-      {/* Modal Convidar Familiar */}
+      {/* =========================================================================
+          MODAL: CONFIGURAR PARÀMETRES DEL SORTEIG (MESTRE)
+          ========================================================================= */}
+      <Dialog open={openEditionModal} onClose={() => setOpenEditionModal(false)} maxWidth="xs" fullWidth>
+        <Box component="form" onSubmit={handleSaveEdition}>
+          <DialogTitle sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>
+            Configuració del Sorteig
+          </DialogTitle>
+          <DialogContent>
+            <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+              Modifica el nom de referència i l'import màxim acordat per la família.
+            </Typography>
+            <TextField
+              label="Nom de l'edició / sorteig"
+              placeholder="ex: Nadal 2026"
+              fullWidth
+              value={editionName}
+              onChange={(e) => setEditionName(e.target.value)}
+              required
+              sx={{ mb: 2.5, mt: 1 }}
+            />
+            <TextField
+              label="Import màxim de regal (€)"
+              placeholder="ex: 30.00 (o 0 si no hi ha límit)"
+              type="number"
+              fullWidth
+              value={editionBudget}
+              onChange={(e) => setEditionBudget(e.target.value)}
+              helperText="Els familiars veuran aquest pressupost com a referència a la seva llista."
+              sx={{ mb: 1 }}
+            />
+          </DialogContent>
+          <DialogActions sx={{ p: 2 }}>
+            <Button onClick={() => setOpenEditionModal(false)}>Cancel·lar</Button>
+            <Button type="submit" variant="contained" color="primary" disabled={isLoading}>
+              Desar canvis
+            </Button>
+          </DialogActions>
+        </Box>
+      </Dialog>
+
+      {/* =========================================================================
+          MODAL: CONVIDAR FAMILIAR
+          ========================================================================= */}
       <Dialog open={openInviteModal} onClose={() => setOpenInviteModal(false)} maxWidth="xs" fullWidth>
         <Box component="form" onSubmit={handleInviteSubmit}>
           <DialogTitle sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700 }}>
@@ -324,33 +530,32 @@ export const AdminDashboardView: React.FC = () => {
           <DialogContent>
             <TextField
               label="Nom del familiar"
-              placeholder="Ex: Laia, Oncle Joan..."
+              placeholder="ex: Oncle Joan"
               fullWidth
               value={newMemberName}
               onChange={(e) => setNewMemberName(e.target.value)}
               required
-              sx={{ mt: 1, mb: 2 }}
+              sx={{ mb: 2, mt: 1 }}
             />
             <TextField
               label="Correu electrònic"
               type="email"
-              placeholder="laia@gmail.com"
+              placeholder="ex: joan@familia.cat"
               fullWidth
               value={newMemberEmail}
               onChange={(e) => setNewMemberEmail(e.target.value)}
               required
             />
           </DialogContent>
-          <DialogActions sx={{ p: 2.5 }}>
+          <DialogActions sx={{ p: 2 }}>
             <Button onClick={() => setOpenInviteModal(false)}>Cancel·lar</Button>
-            <Button type="submit" variant="contained" color="primary">
-              Desar i Convidar
+            <Button type="submit" variant="contained" color="primary" disabled={isLoading}>
+              Afegir al sorteig
             </Button>
           </DialogActions>
         </Box>
       </Dialog>
 
-      {/* Toast de confirmació de còpia */}
       <Snackbar
         open={!!toastMessage}
         autoHideDuration={4000}

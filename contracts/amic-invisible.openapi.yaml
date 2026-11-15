@@ -323,6 +323,27 @@ paths:
         '404':
           $ref: '#/components/responses/NotFound'
 
+  /wishlist/copy-previous:
+    post:
+      summary: Traspassar o copiar els desitjos de l'edició anterior cap a l'edició activa
+      operationId: copyPreviousWishlist
+      responses:
+        '200':
+          description: Desitjos traspassats correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  copied:
+                    type: integer
+                    example: 3
+                  message:
+                    type: string
+                    example: "S'han traspassat 3 desitjos de l'edició anterior"
+        '400':
+          $ref: '#/components/responses/BadRequest'
+
   /upload:
     post:
       summary: Pujada d'imatge (foto càmera mòbil o fitxer des del PC)

@@ -52,9 +52,9 @@ export const GiftAssignedView: React.FC = () => {
             El sorteig encara no s'ha celebrat
           </Typography>
           <Typography color="text.secondary" sx={{ maxWidth: 500, mx: 'auto' }}>
-            L'administrador de la família està acabant de recollir les llistes i
-            incompatibilitats. Tan bon punt premi el botó, rebràs un correu i
-            veuràs aquí la teva persona assignada!
+            L'administrador de la família està acabant de preparar el sorteig i
+            recollir les llistes de desitjos. Tan bon punt premi el botó, rebràs
+            un correu i veuràs aquí la teva persona assignada!
           </Typography>
         </Card>
       </Container>

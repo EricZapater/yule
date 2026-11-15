@@ -2,6 +2,7 @@ package wishlist
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"yule/backend/internal/shared"
 
@@ -108,4 +109,23 @@ func (h *Handler) DeleteWishlistItem(c *gin.Context) {
 	}
 
 	c.Status(http.StatusNoContent)
+}
+
+func (h *Handler) CopyPreviousWishlist(c *gin.Context) {
+	userID, exists := c.Get(shared.ContextUserID)
+	if !exists {
+		shared.RespondError(c, http.StatusUnauthorized, "UNAUTHORIZED", "Sessió requerida")
+		return
+	}
+
+	count, err := h.service.CopyPreviousWishlist(userID.(string))
+	if err != nil {
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error traspassant desitjos anteriors")
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"copied":  count,
+		"message": fmt.Sprintf("S'han traspassat %d desitjos de l'edició anterior", count),
+	})
 }

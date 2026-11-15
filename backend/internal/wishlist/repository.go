@@ -79,3 +79,38 @@ func (r *Repository) DeleteItem(itemID, userID string) error {
 	_, err := r.db.Exec(query, itemID, userID)
 	return err
 }
+
+// CopyPreviousWishlist copia els desitjos que l'usuari tenia en un sorteig/edició anterior cap a l'edició actual.
+func (r *Repository) CopyPreviousWishlist(currentEditionID, userID string) (int, error) {
+	// Trobar l'edició anterior on l'usuari tenia desitjos
+	queryPrev := `
+		SELECT edition_id 
+		FROM wishlist_items 
+		WHERE user_id = $1 AND edition_id <> $2 
+		ORDER BY created_at DESC 
+		LIMIT 1
+	`
+	var prevEditionID string
+	err := r.db.QueryRow(queryPrev, userID, currentEditionID).Scan(&prevEditionID)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return 0, nil // No hi ha cap edició anterior amb desitjos
+		}
+		return 0, err
+	}
+
+	// Copiar els desitjos de l'edició anterior que no estiguin ja a l'edició actual (per títol)
+	queryCopy := `
+		INSERT INTO wishlist_items (id, edition_id, user_id, title, price_estimated, url, image_url, notes)
+		SELECT gen_random_uuid(), $1, user_id, title, price_estimated, url, image_url, notes
+		FROM wishlist_items
+		WHERE edition_id = $2 AND user_id = $3
+		  AND title NOT IN (SELECT title FROM wishlist_items WHERE edition_id = $1 AND user_id = $3)
+	`
+	res, err := r.db.Exec(queryCopy, currentEditionID, prevEditionID, userID)
+	if err != nil {
+		return 0, err
+	}
+	count, _ := res.RowsAffected()
+	return int(count), nil
+}

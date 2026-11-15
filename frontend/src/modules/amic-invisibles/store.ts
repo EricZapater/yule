@@ -27,7 +27,9 @@ interface YuleState {
   logout: () => void;
   fetchMe: () => Promise<void>;
   fetchEdition: () => Promise<void>;
+  updateEdition: (data: { name?: string; budget_limit?: number }) => Promise<boolean>;
   fetchMyWishlist: () => Promise<void>;
+  copyPreviousWishlist: () => Promise<number>;
   addWishlistItem: (data: {
     title: string;
     price_estimated?: number | null;
@@ -121,12 +123,44 @@ export const useYuleStore = create<YuleState>((set, get) => ({
     }
   },
 
+  updateEdition: async (data: { name?: string; budget_limit?: number }) => {
+    try {
+      set({ isLoading: true, error: null });
+      const res = await yuleApi.updateCurrentEdition(data);
+      set({ currentEdition: res.data, isLoading: false });
+      return true;
+    } catch (err: any) {
+      set({
+        isLoading: false,
+        error: err.response?.data?.error || "Error actualitzant l'edició",
+      });
+      return false;
+    }
+  },
+
   fetchMyWishlist: async () => {
     try {
       const res = await yuleApi.getMyWishlist();
       set({ myWishlist: res.data });
     } catch {
       // Error silent
+    }
+  },
+
+  copyPreviousWishlist: async () => {
+    try {
+      set({ isLoading: true, error: null });
+      const res = await yuleApi.copyPreviousWishlist();
+      // Recarregar la llista actualitzada
+      const listRes = await yuleApi.getMyWishlist();
+      set({ myWishlist: listRes.data, isLoading: false });
+      return res.data.copied;
+    } catch (err: any) {
+      set({
+        isLoading: false,
+        error: err.response?.data?.error || "Error traspassant desitjos anteriors",
+      });
+      return 0;
     }
   },
 

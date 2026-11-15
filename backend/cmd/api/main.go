@@ -116,6 +116,7 @@ func main() {
 			authGroup.POST("/wishlist", wishlistHandler.AddWishlistItem)
 			authGroup.PUT("/wishlist/:item_id", wishlistHandler.UpdateWishlistItem)
 			authGroup.DELETE("/wishlist/:item_id", wishlistHandler.DeleteWishlistItem)
+			authGroup.POST("/wishlist/copy-previous", wishlistHandler.CopyPreviousWishlist)
 
 			authGroup.POST("/upload", uploadHandler.UploadPhoto)
 

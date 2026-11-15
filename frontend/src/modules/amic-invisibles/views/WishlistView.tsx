@@ -26,6 +26,7 @@ export const WishlistView: React.FC = () => {
     fetchMyWishlist,
     addWishlistItem,
     deleteWishlistItem,
+    copyPreviousWishlist,
   } = useYuleStore();
 
   const [title, setTitle] = useState('');
@@ -34,6 +35,7 @@ export const WishlistView: React.FC = () => {
   const [notes, setNotes] = useState('');
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
@@ -78,9 +80,18 @@ export const WishlistView: React.FC = () => {
     }
   };
 
-  const budget = currentEdition?.budget_limit || 30.0;
+  const handleCopyPrevious = async () => {
+    const count = await copyPreviousWishlist();
+    if (count > 0) {
+      setFeedbackMsg(`S'han traspassat ${count} desitjos de l'edició anterior amb èxit! ✨`);
+    } else {
+      setFeedbackMsg("No s'han trobat desitjos d'edicions anteriors per traspassar.");
+    }
+  };
+
+  const budget = currentEdition?.budget_limit && currentEdition.budget_limit > 0 ? currentEdition.budget_limit : null;
   const priceNum = parseFloat(price);
-  const isOverBudget = !isNaN(priceNum) && priceNum > budget;
+  const isOverBudget = budget !== null && !isNaN(priceNum) && priceNum > budget;
 
   return (
     <Container maxWidth="md" sx={{ mt: { xs: 2.5, md: 4 } }}>
@@ -100,7 +111,7 @@ export const WishlistView: React.FC = () => {
         </Typography>
       </Box>
 
-      {/* Indicador de Pressupost */}
+      {/* Indicador de Pressupost i Opció de traspàs */}
       <Box
         sx={{
           bgcolor: '#fbf6e2',
@@ -110,15 +121,46 @@ export const WishlistView: React.FC = () => {
           mb: 3,
           display: 'flex',
           alignItems: 'center',
+          justifyContent: 'space-between',
+          flexWrap: 'wrap',
           gap: 1.5,
         }}
       >
-        <Typography fontSize="20px">✨</Typography>
-        <Typography variant="body2" sx={{ color: '#6d4e00', fontWeight: 600 }}>
-          Pressupost màxim de la família:{' '}
-          <strong>{budget.toFixed(2)} €</strong> (orientatiu)
-        </Typography>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
+          <Typography fontSize="20px">✨</Typography>
+          <Typography variant="body2" sx={{ color: '#6d4e00', fontWeight: 600 }}>
+            {budget !== null ? (
+              <>
+                Pressupost màxim de la família:{' '}
+                <strong>{budget.toFixed(2)} €</strong> (orientatiu)
+              </>
+            ) : (
+              <>Sense límit de pressupost fixat per l'administrador (lliure)</>
+            )}
+          </Typography>
+        </Box>
+
+        <Button
+          variant="outlined"
+          color="warning"
+          size="small"
+          onClick={handleCopyPrevious}
+          disabled={isLoading}
+          sx={{ fontSize: '12px', fontWeight: 700 }}
+        >
+          📋 Traspassar desitjos d'edicions anteriors
+        </Button>
       </Box>
+
+      {feedbackMsg && (
+        <Alert
+          severity="info"
+          onClose={() => setFeedbackMsg(null)}
+          sx={{ mb: 3, borderRadius: 2 }}
+        >
+          {feedbackMsg}
+        </Alert>
+      )}
 
       {/* Formulari d'afegir desig */}
       <Card sx={{ mb: 4, p: { xs: 2.5, md: 3.5 } }}>
@@ -159,7 +201,7 @@ export const WishlistView: React.FC = () => {
                 onChange={(e) => setPrice(e.target.value)}
                 error={isOverBudget}
                 helperText={
-                  isOverBudget
+                  isOverBudget && budget !== null
                     ? `Supera el límit recomanat de ${budget.toFixed(2)} €`
                     : ''
                 }
