@@ -3,6 +3,7 @@ package edition
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"time"
 
 	"github.com/google/uuid"
@@ -65,22 +66,27 @@ func (r *Repository) CreateEdition(year int, name string, budgetLimit float64, c
 	newID := uuid.New().String()
 	insertQuery := `
 		INSERT INTO editions (id, year, name, budget_limit, status) 
-		VALUES ($1, $2, $3, $4, 'wishlists_open') 
+		VALUES ($1::uuid, $2, $3, $4, 'wishlists_open') 
 		RETURNING id, year, name, budget_limit, status, drawn_at, created_at
 	`
 	var ed Edition
 	err := r.db.QueryRow(insertQuery, newID, year, name, budgetLimit).Scan(&ed.ID, &ed.Year, &ed.Name, &ed.BudgetLimit, &ed.Status, &ed.DrawnAt, &ed.CreatedAt)
 	if err != nil {
+		log.Printf("❌ Error creant edició a la base de dades (Any: %d, Nom: %s): %v", year, name, err)
 		return nil, err
 	}
 
 	if copyMembers {
 		copyQuery := `
 			INSERT INTO edition_members (edition_id, user_id, is_active)
-			SELECT $1, id, true FROM users
+			SELECT $1::uuid, id, true FROM users
 			ON CONFLICT DO NOTHING
 		`
-		_, _ = r.db.Exec(copyQuery, ed.ID)
+		if _, err := r.db.Exec(copyQuery, ed.ID); err != nil {
+			log.Printf("⚠️ Error copiant membres a la nova edició: %v", err)
+		} else {
+			log.Printf("👥 Membres vinculats correctament a la nova edició %s", ed.Name)
+		}
 	}
 
 	return &ed, nil

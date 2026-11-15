@@ -86,3 +86,6 @@ CREATE TABLE IF NOT EXISTS purchased_items (
 CREATE INDEX IF NOT EXISTS idx_magic_links_token ON magic_links(token);
 CREATE INDEX IF NOT EXISTS idx_wishlist_items_user ON wishlist_items(edition_id, user_id);
 CREATE INDEX IF NOT EXISTS idx_assignments_edition ON assignments(edition_id);
+
+-- Eliminar restricció de clau única per any a editions per permetre múltiples sortejos
+ALTER TABLE editions DROP CONSTRAINT IF EXISTS editions_year_key;

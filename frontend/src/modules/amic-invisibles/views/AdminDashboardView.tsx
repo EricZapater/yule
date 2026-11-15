@@ -74,6 +74,7 @@ export const AdminDashboardView: React.FC = () => {
   const [newEditionName, setNewEditionName] = useState('');
   const [newEditionBudget, setNewEditionBudget] = useState('30');
   const [newEditionCopyMembers, setNewEditionCopyMembers] = useState(true);
+  const [createEditionError, setCreateEditionError] = useState<string | null>(null);
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -89,13 +90,18 @@ export const AdminDashboardView: React.FC = () => {
     setNewEditionName(`Nadal ${nextYear}`);
     setNewEditionBudget(currentEdition?.budget_limit ? currentEdition.budget_limit.toString() : '30');
     setNewEditionCopyMembers(true);
+    setCreateEditionError(null);
     setOpenCreateEditionModal(true);
   };
 
   const handleCreateEdition = async (e: React.FormEvent) => {
     e.preventDefault();
+    setCreateEditionError(null);
     const yearNum = parseInt(newEditionYear, 10);
-    if (!yearNum || !newEditionName.trim()) return;
+    if (!yearNum || !newEditionName.trim()) {
+      setCreateEditionError("Cal introduir l'any i el nom del sorteig.");
+      return;
+    }
 
     const budgetNum = parseFloat(newEditionBudget) || 0;
     const ok = await createEdition({
@@ -107,6 +113,10 @@ export const AdminDashboardView: React.FC = () => {
     if (ok) {
       setToastMessage(`🎉 Nou sorteig "${newEditionName}" creat amb èxit!`);
       setOpenCreateEditionModal(false);
+      setCreateEditionError(null);
+    } else {
+      const err = useYuleStore.getState().error || "No s'ha pogut crear el nou sorteig.";
+      setCreateEditionError(err);
     }
   };
 
@@ -642,6 +652,11 @@ export const AdminDashboardView: React.FC = () => {
             🎄 Crear un Nou Sorteig
           </DialogTitle>
           <DialogContent>
+            {createEditionError && (
+              <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+                {createEditionError}
+              </Alert>
+            )}
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Inicia una nova edició per a la família. Es mantindrà l'historial d'anys anteriors i els familiars podran traspassar els seus desitjos.
             </Typography>

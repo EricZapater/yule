@@ -21,6 +21,9 @@ func AutoMigrate(conn *sql.DB, migrationFile string) error {
 		return fmt.Errorf("error executant migració: %w", err)
 	}
 
+	// Migració idempotent: eliminar la restricció UNIQUE d'editions.year per permetre crear múltiples sortejos
+	_, _ = conn.Exec("ALTER TABLE editions DROP CONSTRAINT IF EXISTS editions_year_key;")
+
 	return nil
 }
 
