@@ -1,0 +1,22 @@
+backend/internal/db/migrate.go
+  h_42175f19913982 24-26
+backend/internal/db/migrations/000001_init_schema.up.sql
+  h_42175f19913982 89-91
+backend/internal/edition/handler.go
+  h_42175f19913982 4-5,7,42,48-53
+backend/internal/edition/repository.go
+  h_42175f19913982 6,69,75,82,85-89
+frontend/src/modules/amic-invisibles/views/AdminDashboardView.tsx
+  h_42175f19913982 77,93,99,101-104,116-119,655-659
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "ecfa9ca5f8924d74aea62aff7d3db483f21d4cc6",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
