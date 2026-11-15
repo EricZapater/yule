@@ -95,7 +95,8 @@ export const WishlistView: React.FC = () => {
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [feedbackMsg, setFeedbackMsg] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+  const galleryInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchEdition();
@@ -121,8 +122,11 @@ export const WishlistView: React.FC = () => {
       alert(`Error pujant la fotografia: ${msg}`);
     } finally {
       setIsUploading(false);
-      if (fileInputRef.current) {
-        fileInputRef.current.value = '';
+      if (cameraInputRef.current) {
+        cameraInputRef.current.value = '';
+      }
+      if (galleryInputRef.current) {
+        galleryInputRef.current.value = '';
       }
     }
   };
@@ -288,47 +292,93 @@ export const WishlistView: React.FC = () => {
             </Grid>
           </Grid>
 
-          {/* Càmera / Galeria / Pujada de fotos */}
+          {/* Inputs ocults per a càmera directa i galeria d'imatges */}
           <input
             type="file"
             accept="image/*"
-            ref={fileInputRef}
+            capture="environment"
+            ref={cameraInputRef}
+            style={{ display: 'none' }}
+            onChange={handleFileChange}
+          />
+          <input
+            type="file"
+            accept="image/*"
+            ref={galleryInputRef}
             style={{ display: 'none' }}
             onChange={handleFileChange}
           />
 
           {!photoUrl ? (
             <Box
-              onClick={() => fileInputRef.current?.click()}
               sx={{
                 border: '2px dashed #c5baa8',
                 borderRadius: 3,
-                p: 2.5,
+                p: { xs: 2, sm: 2.5 },
                 textAlign: 'center',
                 bgcolor: '#faf8f5',
-                cursor: 'pointer',
                 mb: 2,
-                transition: 'all 0.2s',
-                '&:hover': { bgcolor: '#f4eee3', borderColor: '#b7094c' },
               }}
             >
               {isUploading ? (
-                <CircularProgress size={28} sx={{ color: '#1b4332' }} />
+                <Box sx={{ py: 1.5 }}>
+                  <CircularProgress size={30} sx={{ color: '#1b4332', mb: 1 }} />
+                  <Typography variant="body2" sx={{ color: '#1b4332', fontWeight: 600 }}>
+                    Optimizant i pujant la imatge... ✨
+                  </Typography>
+                </Box>
               ) : (
                 <>
-                  <Box sx={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 1, mb: 0.5 }}>
-                    <PhotoCameraIcon sx={{ fontSize: 32, color: '#1b4332' }} />
-                    <AddPhotoAlternateIcon sx={{ fontSize: 32, color: '#d4af37' }} />
-                  </Box>
                   <Typography
                     variant="subtitle2"
-                    sx={{ fontWeight: 700, color: '#1b4332' }}
+                    sx={{ fontWeight: 700, color: '#1b4332', mb: 0.5 }}
                   >
-                    Fes una foto o adjunta-la des de la galeria
+                    Adjuntar una foto al regal (Opcional)
                   </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    Tria una imatge des de la teva galeria o fes una foto amb la càmera
+                  <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 2 }}>
+                    Fes una foto a l'aparador o tria una captura guardada al teu telèfon
                   </Typography>
+
+                  <Grid container spacing={1.5} justifyContent="center">
+                    <Grid item xs={12} sm={6}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        startIcon={<PhotoCameraIcon />}
+                        onClick={() => cameraInputRef.current?.click()}
+                        sx={{
+                          py: 1.2,
+                          borderColor: '#1b4332',
+                          color: '#1b4332',
+                          fontWeight: 700,
+                          borderRadius: 2,
+                          bgcolor: '#ffffff',
+                          '&:hover': { bgcolor: '#eef5f1', borderColor: '#1b4332' },
+                        }}
+                      >
+                        📸 Fer Foto (Càmera)
+                      </Button>
+                    </Grid>
+                    <Grid item xs={12} sm={6}>
+                      <Button
+                        fullWidth
+                        variant="outlined"
+                        startIcon={<AddPhotoAlternateIcon />}
+                        onClick={() => galleryInputRef.current?.click()}
+                        sx={{
+                          py: 1.2,
+                          borderColor: '#d4af37',
+                          color: '#7a5300',
+                          fontWeight: 700,
+                          borderRadius: 2,
+                          bgcolor: '#ffffff',
+                          '&:hover': { bgcolor: '#fffdf5', borderColor: '#d4af37' },
+                        }}
+                      >
+                        🖼️ Tria de la Galeria
+                      </Button>
+                    </Grid>
+                  </Grid>
                 </>
               )}
             </Box>
