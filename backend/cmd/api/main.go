@@ -68,7 +68,7 @@ func main() {
 	incompHandler := incompatibility.NewHandler(incompService)
 
 	drawRepo := draw.NewRepository(conn)
-	drawService := draw.NewService(drawRepo, editionService, drawEngine)
+	drawService := draw.NewService(drawRepo, editionService, drawEngine, appMailer)
 	drawHandler := draw.NewHandler(drawService)
 
 	uploadDir := filepath.Join(".", "uploads", "photos")
@@ -141,6 +141,7 @@ func main() {
 				adminGroup.GET("/incompatibilities/check-viability", incompHandler.CheckViability)
 
 				adminGroup.POST("/draw", drawHandler.ExecuteDraw)
+				adminGroup.POST("/draw/notify", drawHandler.NotifyAssignments)
 			}
 		}
 	}

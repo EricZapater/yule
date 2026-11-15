@@ -59,6 +59,7 @@ interface YuleState {
   ) => Promise<boolean>;
   deleteIncompatibility: (id: string) => Promise<void>;
   executeDraw: () => Promise<boolean>;
+  notifyDraw: () => Promise<number>;
 }
 
 export const useYuleStore = create<YuleState>((set, get) => ({
@@ -338,6 +339,18 @@ export const useYuleStore = create<YuleState>((set, get) => ({
     } catch {
       set({ isLoading: false });
       return false;
+    }
+  },
+
+  notifyDraw: async () => {
+    try {
+      set({ isLoading: true });
+      const res = await yuleApi.notifyDraw();
+      set({ isLoading: false });
+      return res.data.dispatched;
+    } catch {
+      set({ isLoading: false });
+      return -1;
     }
   },
 }));

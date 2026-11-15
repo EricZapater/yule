@@ -2,7 +2,8 @@ package draw
 
 import (
 	"errors"
-	"fmt"
+	"log"
+	"os"
 	"yule/backend/internal/edition"
 )
 
@@ -10,17 +11,24 @@ var (
 	ErrDrawNotReady = errors.New("el sorteig d'aquesta edició encara no s'ha realitzat")
 )
 
+type Mailer interface {
+	SendDrawNotification(toEmail, giverName, receiverName, editionName string, budgetLimit float64, appURL string) error
+	IsConfigured() bool
+}
+
 type Service struct {
 	repo           *Repository
 	editionService *edition.Service
 	engine         *Engine
+	mailer         Mailer
 }
 
-func NewService(repo *Repository, editionService *edition.Service, engine *Engine) *Service {
+func NewService(repo *Repository, editionService *edition.Service, engine *Engine, mailer Mailer) *Service {
 	return &Service{
 		repo:           repo,
 		editionService: editionService,
 		engine:         engine,
+		mailer:         mailer,
 	}
 }
 
@@ -57,26 +65,79 @@ func (s *Service) ExecuteDraw() (*DrawExecutionResponse, error) {
 		return nil, err
 	}
 
-	nameByID := make(map[string]string)
-	for _, p := range participants {
-		nameByID[p.ID] = p.Name
-	}
-
-	// Simulem l'enviament de correus per consola per a cadascun
-	fmt.Printf("\n📨 [NOTIFICACIONS SORTEIG] Edició %s celebrada amb èxit:\n", currentEd.Name)
-	for _, pair := range results {
-		giverName := nameByID[pair.GiverID]
-		giverEmail := emails[pair.GiverID]
-		receiverName := nameByID[pair.ReceiverID]
-		fmt.Printf("  • A %s (%s): T'ha tocat fer el regal a %s! 🎁\n", giverName, giverEmail, receiverName)
-	}
+	// Enviem les notificacions per correu a cadascun
+	dispatched := s.dispatchNotifications(currentEd, participants, emails, results)
 
 	return &DrawExecutionResponse{
 		Status:            "drawn",
 		DrawnAt:           drawnAt,
 		ParticipantsCount: len(participants),
-		EmailsDispatched:  len(results),
+		EmailsDispatched:  dispatched,
 	}, nil
+}
+
+// NotifyAssignments envia o reenvia els correus del sorteig actual sense refer les parelles.
+func (s *Service) NotifyAssignments() (int, error) {
+	currentEd, err := s.editionService.GetCurrentEdition()
+	if err != nil {
+		return 0, err
+	}
+
+	if currentEd.Status != "drawn" {
+		return 0, ErrDrawNotReady
+	}
+
+	assignments, err := s.repo.GetEditionAssignments(currentEd.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	participants, emails, err := s.repo.GetActiveParticipantsWithEmail(currentEd.ID)
+	if err != nil {
+		return 0, err
+	}
+
+	dispatched := s.dispatchNotifications(currentEd, participants, emails, assignments)
+	return dispatched, nil
+}
+
+func (s *Service) dispatchNotifications(currentEd *edition.Edition, participants []Participant, emails map[string]string, pairs []AssignmentResult) int {
+	nameByID := make(map[string]string)
+	for _, p := range participants {
+		nameByID[p.ID] = p.Name
+	}
+
+	baseURL := os.Getenv("APP_BASE_URL")
+	if baseURL == "" {
+		baseURL = "https://yule.ericzapater.cat"
+	}
+
+	log.Printf("\n📨 [NOTIFICACIONS SORTEIG] Edició %s celebrada amb èxit (%d participants):", currentEd.Name, len(pairs))
+	dispatched := 0
+	for _, pair := range pairs {
+		giverName := nameByID[pair.GiverID]
+		giverEmail := emails[pair.GiverID]
+		receiverName := nameByID[pair.ReceiverID]
+
+		log.Printf("  • A %s (%s): T'ha tocat fer el regal a %s! 🎁", giverName, giverEmail, receiverName)
+
+		if s.mailer != nil && s.mailer.IsConfigured() && giverEmail != "" {
+			dispatched++
+			go func(toEmail, gName, rName string) {
+				log.Printf("🚀 Enviant correu de sorteig a %s (%s)...", gName, toEmail)
+				if err := s.mailer.SendDrawNotification(toEmail, gName, rName, currentEd.Name, currentEd.BudgetLimit, baseURL); err != nil {
+					log.Printf("❌ ERROR enviant correu de sorteig a %s: %v", toEmail, err)
+				} else {
+					log.Printf("✅ Correu de sorteig enviat amb èxit a %s", toEmail)
+				}
+			}(giverEmail, giverName, receiverName)
+		} else {
+			if s.mailer == nil || !s.mailer.IsConfigured() {
+				log.Printf("ℹ️ [SENSE SMTP] El servidor no té SMTP configurat. El correu per a %s no s'ha enviat.", giverEmail)
+			}
+		}
+	}
+	return dispatched
 }
 
 // GetMyAssignment retorna el destinatari secret i la seva llista de desitjos per a l'usuari connectat.

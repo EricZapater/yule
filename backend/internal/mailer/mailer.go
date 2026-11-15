@@ -137,6 +137,75 @@ func (m *Mailer) SendMagicLink(toEmail, toName, magicLinkURL string) error {
 	return m.sendEmail(toEmail, subject, htmlBody)
 }
 
+// SendDrawNotification envia el correu festiu revelant qui és la persona assignada a l'amic invisible.
+func (m *Mailer) SendDrawNotification(toEmail, giverName, receiverName, editionName string, budgetLimit float64, appURL string) error {
+	if !m.IsConfigured() {
+		return fmt.Errorf("SMTP no està configurat")
+	}
+
+	if giverName == "" {
+		giverName = "Familiar"
+	}
+
+	budgetInfo := ""
+	if budgetLimit > 0 {
+		budgetInfo = fmt.Sprintf(`<div style="background: #faf4e8; border: 1px solid #ebd8b2; border-radius: 8px; padding: 12px; margin: 16px 0; text-align: center;">
+          <span style="font-size: 13px; color: #6d4e00; font-weight: bold; text-transform: uppercase;">Pressupost màxim orientatiu:</span>
+          <div style="font-size: 20px; font-weight: 800; color: #1b4332; margin-top: 4px;">%.2f €</div>
+        </div>`, budgetLimit)
+	}
+
+	subject := fmt.Sprintf("🎁 Ja saps a qui regales! Sorteig celebrat (%s)", editionName)
+
+	htmlBody := fmt.Sprintf(`<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <style>
+    body { font-family: 'Helvetica Neue', Arial, sans-serif; background-color: #fdfaf6; margin: 0; padding: 24px; color: #1f2937; }
+    .card { max-width: 540px; margin: 0 auto; background: #ffffff; border: 2px solid #d4af37; border-radius: 12px; padding: 32px; box-shadow: 0 4px 16px rgba(0,0,0,0.06); }
+    .header { text-align: center; margin-bottom: 24px; }
+    .header h1 { color: #1b4332; margin: 8px 0 0; font-size: 26px; }
+    .target-box { background: #faf8f5; border: 2px solid #d4af37; border-radius: 10px; padding: 20px; text-align: center; margin: 24px 0; }
+    .target-name { font-size: 28px; font-weight: 800; color: #9d0208; margin-top: 6px; }
+    .btn { display: inline-block; background-color: #1b4332; color: #ffffff !important; font-size: 16px; font-weight: bold; text-decoration: none; padding: 14px 28px; border-radius: 8px; margin: 16px 0; border: 1px solid #d4af37; text-align: center; }
+    .footer { font-size: 12px; color: #6b7280; text-align: center; margin-top: 24px; border-top: 1px solid #e5e7eb; padding-top: 16px; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="header">
+      <div style="font-size: 42px;">🎄🎁</div>
+      <h1>El Sorteig s'ha Celebrat!</h1>
+      <p style="color: #6b7280; margin: 4px 0 0; font-size: 14px;">%s</p>
+    </div>
+    <p>Hola <strong>%s</strong>,</p>
+    <p>L'administrador de la família ha celebrat el sorteig de l'Amic Invisible i les parelles secretes ja han quedat assignades.</p>
+    
+    <div class="target-box">
+      <div style="font-size: 13px; color: #9d0208; font-weight: bold; text-transform: uppercase; letter-spacing: 1px;">Aquest Nadal et toca regalar a...</div>
+      <div class="target-name">✨ %s ✨</div>
+    </div>
+
+    %s
+
+    <p>Pots consultar la seva <strong>llista de desitjos, idees i fotos</strong> directament a l'aplicació per encertar amb el regal:</p>
+    
+    <div style="text-align: center;">
+      <a href="%s" class="btn">Veure la llista de desitjos de %s 🎁</a>
+    </div>
+
+    <div class="footer">
+      Recorda mantenir el secret fins al dia de l'entrega!<br>
+      Bones Festes i feliç Yule! 🎅✨
+    </div>
+  </div>
+</body>
+</html>`, editionName, giverName, receiverName, budgetInfo, appURL, receiverName)
+
+	return m.sendEmail(toEmail, subject, htmlBody)
+}
+
 func (m *Mailer) sendEmail(toEmail, subject, htmlBody string) error {
 	addr := net.JoinHostPort(m.host, m.port)
 

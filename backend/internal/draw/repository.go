@@ -109,6 +109,26 @@ func (r *Repository) SaveAssignmentsTransactional(editionID string, results []As
 	return now, nil
 }
 
+// GetEditionAssignments retorna totes les parelles assignades d'una edició.
+func (r *Repository) GetEditionAssignments(editionID string) ([]AssignmentResult, error) {
+	query := `SELECT giver_id, receiver_id FROM assignments WHERE edition_id = $1`
+	rows, err := r.db.Query(query, editionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var list []AssignmentResult
+	for rows.Next() {
+		var a AssignmentResult
+		if err := rows.Scan(&a.GiverID, &a.ReceiverID); err != nil {
+			return nil, err
+		}
+		list = append(list, a)
+	}
+	return list, nil
+}
+
 // GetMyAssignment retorna el receptor assignat i els seus articles de desitjos (i l'estat marcat pel regalador).
 func (r *Repository) GetMyAssignment(editionID, giverID string) (*RecipientSummary, []AssignedWishlistItem, error) {
 	var recipient RecipientSummary

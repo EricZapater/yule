@@ -551,6 +551,31 @@ paths:
         '403':
           $ref: '#/components/responses/Forbidden'
 
+  /draw/notify:
+    post:
+      summary: (Admin) Reenviar les notificacions per correu de les assignacions actuals
+      operationId: notifyAssignments
+      responses:
+        '200':
+          description: Notificacions enviades amb èxit
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  dispatched:
+                    type: integer
+        '400':
+          description: Sorteig no realitzat
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
   /assignment:
     get:
       summary: Obtenir el destinatari secret assignat a l'usuari i la seva llista de desitjos

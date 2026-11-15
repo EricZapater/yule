@@ -34,6 +34,23 @@ func (h *Handler) ExecuteDraw(c *gin.Context) {
 	c.JSON(http.StatusOK, resp)
 }
 
+func (h *Handler) NotifyAssignments(c *gin.Context) {
+	count, err := h.service.NotifyAssignments()
+	if err != nil {
+		if errors.Is(err, ErrDrawNotReady) {
+			shared.RespondError(c, http.StatusBadRequest, "DRAW_NOT_READY", "El sorteig encara no s'ha realitzat")
+			return
+		}
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error enviant notificacions: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{
+		"message":    "Notificacions per correu enviades als participants",
+		"dispatched": count,
+	})
+}
+
 func (h *Handler) GetMyAssignment(c *gin.Context) {
 	userID, exists := c.Get(shared.ContextUserID)
 	if !exists {

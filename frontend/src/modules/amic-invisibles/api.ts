@@ -97,4 +97,5 @@ export const yuleApi = {
 
   // Execute Draw
   executeDraw: () => apiClient.post('/draw'),
+  notifyDraw: () => apiClient.post<{ message: string; dispatched: number }>('/draw/notify'),
 };

@@ -56,6 +56,7 @@ export const AdminDashboardView: React.FC = () => {
     createEdition,
     updateEdition,
     executeDraw,
+    notifyDraw,
   } = useYuleStore();
 
   const [openInviteModal, setOpenInviteModal] = useState(false);
@@ -165,9 +166,19 @@ export const AdminDashboardView: React.FC = () => {
 
     const ok = await executeDraw();
     if (ok) {
-      setToastMessage('🎉 El sorteig s’ha executat amb èxit! Tothom ja té el seu amic invisible assignat.');
+      setToastMessage('🎉 El sorteig s’ha executat amb èxit! S’han enviat les notificacions per correu a tothom.');
     } else {
       alert("No s'ha pogut executar el sorteig. Comprova que hi hagi un mínim de 3 membres i que les regles siguin viables.");
+    }
+  };
+
+  const handleResendDrawEmails = async () => {
+    if (!window.confirm("Vols enviar els correus del sorteig a tots els participants amb les parelles actuals?")) return;
+    const count = await notifyDraw();
+    if (count >= 0) {
+      setToastMessage(`📨 S'han enviat els correus del sorteig a ${count} participants!`);
+    } else {
+      alert("No s'han pogut enviar els correus. Comprova la configuració del servidor SMTP.");
     }
   };
 
@@ -421,6 +432,30 @@ export const AdminDashboardView: React.FC = () => {
             >
               {currentEdition?.status === 'drawn' ? 'REPETIR EL SORTEIG 🎲' : 'EXECUTAR EL SORTEIG 🎲'}
             </Button>
+
+            {currentEdition?.status === 'drawn' && (
+              <Button
+                variant="outlined"
+                color="primary"
+                size="medium"
+                fullWidth
+                startIcon={<MailOutlineIcon />}
+                onClick={handleResendDrawEmails}
+                disabled={isLoading}
+                sx={{
+                  mt: 1.5,
+                  py: 1.2,
+                  fontSize: '14px',
+                  fontWeight: 700,
+                  borderColor: '#1b4332',
+                  color: '#1b4332',
+                  bgcolor: '#ffffff',
+                  '&:hover': { bgcolor: '#eef5f1', borderColor: '#1b4332' },
+                }}
+              >
+                Reenviar avisos del sorteig per correu 📨
+              </Button>
+            )}
           </Card>
         </Grid>
 
