@@ -18,6 +18,64 @@ import CloseIcon from '@mui/icons-material/Close';
 import { useYuleStore } from '../store';
 import { yuleApi } from '../api';
 
+// Compressió i redimensionament al client per evitar errors de mida amb fotos de mòbil
+async function compressImage(file: File, maxWidth = 1600, quality = 0.82): Promise<File> {
+  if (!file.type.startsWith('image/') || file.type === 'image/svg+xml' || file.type === 'image/gif') {
+    return file;
+  }
+
+  return new Promise((resolve) => {
+    const img = new Image();
+    const objectUrl = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(objectUrl);
+      let { width, height } = img;
+
+      if (width > maxWidth || height > maxWidth) {
+        if (width > height) {
+          height = Math.round((height * maxWidth) / width);
+          width = maxWidth;
+        } else {
+          width = Math.round((width * maxWidth) / height);
+          height = maxWidth;
+        }
+      }
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width;
+      canvas.height = height;
+      const ctx = canvas.getContext('2d');
+      if (!ctx) {
+        resolve(file);
+        return;
+      }
+      ctx.drawImage(img, 0, 0, width, height);
+
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            resolve(file);
+            return;
+          }
+          const baseName = file.name.substring(0, file.name.lastIndexOf('.')) || 'photo';
+          const newFile = new File([blob], `${baseName}.jpg`, {
+            type: 'image/jpeg',
+            lastModified: Date.now(),
+          });
+          resolve(newFile);
+        },
+        'image/jpeg',
+        quality
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(objectUrl);
+      resolve(file);
+    };
+    img.src = objectUrl;
+  });
+}
+
 export const WishlistView: React.FC = () => {
   const {
     myWishlist,
@@ -45,17 +103,27 @@ export const WishlistView: React.FC = () => {
   }, [fetchEdition, fetchMyWishlist]);
 
   const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const rawFile = e.target.files?.[0];
+    if (!rawFile) return;
 
     try {
       setIsUploading(true);
+      const file = await compressImage(rawFile);
       const res = await yuleApi.uploadPhoto(file);
       setPhotoUrl(res.data.url);
-    } catch {
-      alert("Error pujant la fotografia. Comprova que sigui un arxiu d'imatge.");
+    } catch (err: any) {
+      const msg =
+        err.response?.data?.error ||
+        err.response?.data?.message ||
+        (err.response?.status === 413
+          ? 'La imatge és massa gran per ser processada.'
+          : err.message || "Error pujant la fotografia.");
+      alert(`Error pujant la fotografia: ${msg}`);
     } finally {
       setIsUploading(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = '';
+      }
     }
   };
 

@@ -61,10 +61,8 @@ export const yuleApi = {
   // Upload photo
   uploadPhoto: (file: File) => {
     const formData = new FormData();
-    formData.append('file', file);
-    return apiClient.post<{ url: string }>('/upload', formData, {
-      headers: { 'Content-Type': 'multipart/form-data' },
-    });
+    formData.append('file', file, file.name);
+    return apiClient.post<{ url: string }>('/upload', formData);
   },
 
   // Assignment (Sorteig secret)

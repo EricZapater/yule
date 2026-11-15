@@ -13,6 +13,10 @@ apiClient.interceptors.request.use((config) => {
   if (token && config.headers) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  // Si les dades són FormData, deixem que el navegador/Axios afegeixi multipart/form-data amb el boundary automàtic
+  if (config.data instanceof FormData && config.headers) {
+    delete config.headers['Content-Type'];
+  }
   return config;
 });
 

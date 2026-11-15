@@ -30,8 +30,8 @@ func (h *Handler) UploadPhoto(c *gin.Context) {
 	}
 
 	ext := strings.ToLower(filepath.Ext(file.Filename))
-	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" {
-		shared.RespondError(c, http.StatusBadRequest, "BAD_REQUEST", "Format d'imatge no permès (admesos: JPG, PNG, WebP)")
+	if ext != ".jpg" && ext != ".jpeg" && ext != ".png" && ext != ".webp" && ext != ".heic" && ext != ".heif" && ext != ".gif" {
+		shared.RespondError(c, http.StatusBadRequest, "BAD_REQUEST", "Format d'imatge no permès (admesos: JPG, PNG, WebP, HEIC)")
 		return
 	}
 
