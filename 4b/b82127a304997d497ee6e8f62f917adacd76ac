@@ -1,0 +1,24 @@
+backend/internal/draw/repository.go
+  h_42175f19913982 25
+backend/internal/incompatibility/repository.go
+  h_42175f19913982 98
+backend/internal/member/repository.go
+  h_42175f19913982 26,29
+frontend/src/modules/amic-invisibles/store.ts
+  h_42175f19913982 55,326-341
+frontend/src/modules/amic-invisibles/views/AdminDashboardView.tsx
+  h_42175f19913982 27-28,64,173-185,536,605-608,611-613,620,671,680-687,689-709,712-737
+frontend/src/modules/amic-invisibles/views/AdminIncompatibilitiesView.tsx
+  h_42175f19913982 207-208,225-226
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "4bb82127a304997d497ee6e8f62f917adacd76ac",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
