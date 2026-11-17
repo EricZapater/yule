@@ -54,7 +54,7 @@ func (r *Repository) CreateIncompatibility(editionID, p1, p2 string, isMutual bo
 	id := uuid.New().String()
 	query := `
 		INSERT INTO incompatibilities (id, edition_id, person1_id, person2_id, is_mutual, notes)
-		VALUES ($1, $2, $3, $4, $5, $6)
+		VALUES ($1::uuid, $2::uuid, $3::uuid, $4::uuid, $5, $6)
 	`
 	if _, err := r.db.Exec(query, id, editionID, p1, p2, isMutual, notes); err != nil {
 		return nil, err
@@ -70,7 +70,7 @@ func (r *Repository) CreateIncompatibility(editionID, p1, p2 string, isMutual bo
 		FROM incompatibilities i
 		JOIN users u1 ON u1.id = i.person1_id
 		JOIN users u2 ON u2.id = i.person2_id
-		WHERE i.id = $1
+		WHERE i.id = $1::uuid
 	`
 	var inc Incompatibility
 	err := r.db.QueryRow(fetchQuery, id).Scan(
@@ -86,7 +86,7 @@ func (r *Repository) CreateIncompatibility(editionID, p1, p2 string, isMutual bo
 }
 
 func (r *Repository) DeleteIncompatibility(id string) error {
-	query := `DELETE FROM incompatibilities WHERE id = $1`
+	query := `DELETE FROM incompatibilities WHERE id = $1::uuid`
 	_, err := r.db.Exec(query, id)
 	return err
 }
