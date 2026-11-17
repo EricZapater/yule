@@ -88,7 +88,10 @@ export const useYuleStore = create<YuleState>((set, get) => ({
     } catch (err: any) {
       set({
         isLoading: false,
-        error: err.response?.data?.message || 'Error registrant el familiar.',
+        error:
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          'Error registrant el familiar.',
       });
       return false;
     }

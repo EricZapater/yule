@@ -2,6 +2,7 @@ package auth
 
 import (
 	"errors"
+	"log"
 	"net/http"
 	"yule/backend/internal/shared"
 
@@ -61,7 +62,8 @@ func (h *Handler) Register(c *gin.Context) {
 
 	session, err := h.service.Register(input.Name, input.Email)
 	if err != nil {
-		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error registrant el membre")
+		log.Printf("❌ Error registrant membre (%s <%s>): %v", input.Name, input.Email, err)
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error registrant el membre: "+err.Error())
 		return
 	}
 

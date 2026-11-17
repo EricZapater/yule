@@ -145,37 +145,60 @@ func (s *Service) VerifyMagicLink(token string) (*AuthSessionResponse, error) {
 
 // Register registra un nou membre (o recupera l'existent) i el connecta directament a l'edició activa.
 func (s *Service) Register(name, email string) (*AuthSessionResponse, error) {
+	name = strings.TrimSpace(name)
+	email = strings.ToLower(strings.TrimSpace(email))
 	if name == "" || email == "" {
 		return nil, errors.New("cal indicar el nom i el correu electrònic")
 	}
 
+	log.Printf("📝 Intent de registre de membre: '%s' <%s>", name, email)
+
 	user, err := s.repo.FindUserByEmail(email)
 	if err != nil {
-		return nil, err
+		log.Printf("❌ Error cercant usuari existent per email '%s': %v", email, err)
+		return nil, fmt.Errorf("error cercant usuari existent: %w", err)
 	}
 
 	if user == nil {
 		role := "member"
-		count, _ := s.repo.CountUsers()
+		count, err := s.repo.CountUsers()
+		if err != nil {
+			log.Printf("⚠️ Error comptant usuaris: %v", err)
+		}
 		if count == 0 {
 			role = "admin" // El primer familiar que es registra és automàticament l'administrador
 		}
 		newID := uuid.New().String()
+		log.Printf("👤 Creant nou usuari '%s' <%s> (rol: %s, id: %s)...", name, email, role, newID)
 		user, err = s.repo.CreateUser(newID, name, email, role)
 		if err != nil {
-			return nil, err
+			log.Printf("❌ Error creant usuari a la BD: %v", err)
+			return nil, fmt.Errorf("error creant usuari a la base de dades: %w", err)
+		}
+	} else {
+		log.Printf("👤 Usuari existent trobat: id=%s, nom=%s, rol=%s", user.ID, user.Name, user.Role)
+		if name != "" && user.Name != name {
+			_ = s.repo.UpdateUserName(user.ID, name)
+			user.Name = name
 		}
 	}
 
 	// Associar a l'edició activa
 	editionID, err := s.repo.GetActiveEditionID()
-	if err == nil && editionID != "" {
-		_ = s.repo.AttachToEdition(editionID, user.ID)
+	if err != nil {
+		log.Printf("⚠️ No s'ha trobat cap edició activa per associar el membre: %v", err)
+	} else if editionID != "" {
+		if err := s.repo.AttachToEdition(editionID, user.ID); err != nil {
+			log.Printf("⚠️ Error associant usuari %s a l'edició %s: %v", user.ID, editionID, err)
+		} else {
+			log.Printf("🔗 Usuari %s vinculat a l'edició %s", user.ID, editionID)
+		}
 	}
 
 	jwtToken, err := shared.GenerateJWT(user.ID, user.Email, user.Role)
 	if err != nil {
-		return nil, err
+		log.Printf("❌ Error generant JWT per a %s: %v", user.ID, err)
+		return nil, fmt.Errorf("error generant sessió: %w", err)
 	}
 
 	return &AuthSessionResponse{

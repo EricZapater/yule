@@ -33,7 +33,7 @@ func (r *Repository) FindUserByEmail(email string) (*User, error) {
 }
 
 func (r *Repository) FindUserByID(id string) (*User, error) {
-	query := `SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = $1 LIMIT 1`
+	query := `SELECT id, name, email, role, created_at, updated_at FROM users WHERE id = $1::uuid LIMIT 1`
 	var u User
 	err := r.db.QueryRow(query, id).Scan(&u.ID, &u.Name, &u.Email, &u.Role, &u.CreatedAt, &u.UpdatedAt)
 	if errors.Is(err, sql.ErrNoRows) {
@@ -46,7 +46,7 @@ func (r *Repository) FindUserByID(id string) (*User, error) {
 }
 
 func (r *Repository) CreateMagicLink(id, userID, token string, expiresAt time.Time) error {
-	query := `INSERT INTO magic_links (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)`
+	query := `INSERT INTO magic_links (id, user_id, token, expires_at) VALUES ($1::uuid, $2::uuid, $3, $4)`
 	_, err := r.db.Exec(query, id, userID, token, expiresAt)
 	return err
 }
@@ -65,7 +65,7 @@ func (r *Repository) FindValidMagicLink(token string) (*MagicLink, error) {
 }
 
 func (r *Repository) MarkMagicLinkUsed(id string) error {
-	query := `UPDATE magic_links SET used_at = NOW() WHERE id = $1`
+	query := `UPDATE magic_links SET used_at = NOW() WHERE id = $1::uuid`
 	_, err := r.db.Exec(query, id)
 	return err
 }
@@ -73,7 +73,7 @@ func (r *Repository) MarkMagicLinkUsed(id string) error {
 func (r *Repository) CreateUser(id, name, email, role string) (*User, error) {
 	query := `
 		INSERT INTO users (id, name, email, role)
-		VALUES ($1, $2, LOWER($3), $4)
+		VALUES ($1::uuid, $2, LOWER(TRIM($3)), $4)
 		RETURNING id, name, email, role, created_at, updated_at
 	`
 	var u User
@@ -84,8 +84,18 @@ func (r *Repository) CreateUser(id, name, email, role string) (*User, error) {
 	return &u, nil
 }
 
+func (r *Repository) UpdateUserName(id, name string) error {
+	query := `UPDATE users SET name = $1, updated_at = NOW() WHERE id = $2::uuid`
+	_, err := r.db.Exec(query, name, id)
+	return err
+}
+
 func (r *Repository) AttachToEdition(editionID, userID string) error {
-	query := `INSERT INTO edition_members (edition_id, user_id, is_active) VALUES ($1, $2, true) ON CONFLICT DO NOTHING`
+	query := `
+		INSERT INTO edition_members (edition_id, user_id, is_active) 
+		VALUES ($1::uuid, $2::uuid, true) 
+		ON CONFLICT (edition_id, user_id) DO NOTHING
+	`
 	_, err := r.db.Exec(query, editionID, userID)
 	return err
 }
@@ -99,7 +109,7 @@ func (r *Repository) CountUsers() (int, error) {
 
 func (r *Repository) GetActiveEditionID() (string, error) {
 	var id string
-	query := `SELECT id FROM editions ORDER BY year DESC LIMIT 1`
+	query := `SELECT id FROM editions ORDER BY year DESC, created_at DESC LIMIT 1`
 	err := r.db.QueryRow(query).Scan(&id)
 	return id, err
 }

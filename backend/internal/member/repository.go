@@ -49,21 +49,25 @@ func (r *Repository) ListMembersWithWishlistCount(editionID string) ([]MemberAdm
 
 func (r *Repository) CreateUser(name, email, role string) (string, error) {
 	id := uuid.New().String()
-	query := `INSERT INTO users (id, name, email, role) VALUES ($1, $2, LOWER($3), $4) RETURNING id`
+	query := `INSERT INTO users (id, name, email, role) VALUES ($1::uuid, $2, LOWER(TRIM($3)), $4) RETURNING id`
 	var returnedID string
 	err := r.db.QueryRow(query, id, name, email, role).Scan(&returnedID)
 	return returnedID, err
 }
 
 func (r *Repository) AttachToEdition(editionID, userID string) error {
-	query := `INSERT INTO edition_members (edition_id, user_id, is_active) VALUES ($1, $2, true) ON CONFLICT DO NOTHING`
+	query := `
+		INSERT INTO edition_members (edition_id, user_id, is_active) 
+		VALUES ($1::uuid, $2::uuid, true) 
+		ON CONFLICT (edition_id, user_id) DO NOTHING
+	`
 	_, err := r.db.Exec(query, editionID, userID)
 	return err
 }
 
 func (r *Repository) UpdateMember(editionID, userID string, name, email *string, isActive *bool) error {
 	if name != nil || email != nil {
-		query := `UPDATE users SET name = COALESCE($1, name), email = LOWER(COALESCE($2, email)), updated_at = NOW() WHERE id = $3`
+		query := `UPDATE users SET name = COALESCE($1, name), email = LOWER(TRIM(COALESCE($2, email))), updated_at = NOW() WHERE id = $3::uuid`
 		if _, err := r.db.Exec(query, name, email, userID); err != nil {
 			return err
 		}
@@ -72,7 +76,7 @@ func (r *Repository) UpdateMember(editionID, userID string, name, email *string,
 	if isActive != nil {
 		query := `
 			INSERT INTO edition_members (edition_id, user_id, is_active) 
-			VALUES ($1, $2, $3) 
+			VALUES ($1::uuid, $2::uuid, $3) 
 			ON CONFLICT (edition_id, user_id) 
 			DO UPDATE SET is_active = $3
 		`
@@ -88,7 +92,7 @@ func (r *Repository) CreateQuickMagicToken(userID string) (string, error) {
 	id := uuid.New().String()
 	token := "ml_" + uuid.New().String()
 	expiresAt := time.Now().Add(90 * 24 * time.Hour) // 90 dies per l'enllaç de WhatsApp de la família
-	query := `INSERT INTO magic_links (id, user_id, token, expires_at) VALUES ($1, $2, $3, $4)`
+	query := `INSERT INTO magic_links (id, user_id, token, expires_at) VALUES ($1::uuid, $2::uuid, $3, $4)`
 	_, err := r.db.Exec(query, id, userID, token, expiresAt)
 	return token, err
 }
