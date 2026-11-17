@@ -12,6 +12,7 @@ import (
 	"yule/backend/internal/draw"
 	"yule/backend/internal/edition"
 	"yule/backend/internal/incompatibility"
+	"yule/backend/internal/logger"
 	"yule/backend/internal/mailer"
 	"yule/backend/internal/member"
 	"yule/backend/internal/shared"
@@ -74,7 +75,9 @@ func main() {
 	uploadDir := filepath.Join(".", "uploads", "photos")
 	uploadHandler := upload.NewHandler(uploadDir)
 
-	router := gin.Default()
+	router := gin.New()
+	router.Use(logger.Middleware())
+	router.Use(logger.Recovery())
 	router.Use(shared.CORSMiddleware())
 
 	// Fitxers estàtics per fotos
@@ -144,6 +147,14 @@ func main() {
 				adminGroup.POST("/draw", drawHandler.ExecuteDraw)
 				adminGroup.DELETE("/draw", drawHandler.ResetDraw)
 				adminGroup.POST("/draw/notify", drawHandler.NotifyAssignments)
+
+				// Logs de diagnòstic del sistema en memòria
+				adminGroup.GET("/logs", func(c *gin.Context) {
+					logs := logger.GetRecentLogs(100)
+					c.JSON(http.StatusOK, gin.H{
+						"logs": logs,
+					})
+				})
 			}
 		}
 	}

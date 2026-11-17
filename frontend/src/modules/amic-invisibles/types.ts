@@ -65,3 +65,19 @@ export interface ViabilityCheckResponse {
   active_rules_count: number;
   reason?: string | null;
 }
+
+export interface SystemLogEntry {
+  id: string;
+  timestamp: string;
+  level: 'INFO' | 'WARN' | 'ERROR' | 'PANIC';
+  status: number;
+  method: string;
+  path: string;
+  latency_ms: number;
+  client_ip: string;
+  user_id?: string;
+  request_id: string;
+  error_code?: string;
+  error_message?: string;
+  request_body?: string;
+}

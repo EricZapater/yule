@@ -7,6 +7,7 @@ import {
   MemberAdminView,
   Incompatibility,
   ViabilityCheckResponse,
+  SystemLogEntry,
 } from './types';
 
 export const yuleApi = {
@@ -101,4 +102,7 @@ export const yuleApi = {
   executeDraw: () => apiClient.post('/draw'),
   resetDraw: () => apiClient.delete<{ message: string }>('/draw'),
   notifyDraw: () => apiClient.post<{ message: string; dispatched: number }>('/draw/notify'),
+
+  // Diagnostic Logs
+  getSystemLogs: () => apiClient.get<{ logs: SystemLogEntry[] }>('/logs'),
 };

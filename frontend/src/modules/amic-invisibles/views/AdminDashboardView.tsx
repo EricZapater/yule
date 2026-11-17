@@ -38,9 +38,13 @@ import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import DeleteIcon from '@mui/icons-material/Delete';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import TerminalIcon from '@mui/icons-material/Terminal';
+import RefreshIcon from '@mui/icons-material/Refresh';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { useNavigate } from 'react-router-dom';
 import { useYuleStore } from '../store';
 import { yuleApi } from '../api';
+import { SystemLogEntry } from '../types';
 
 export const AdminDashboardView: React.FC = () => {
   const navigate = useNavigate();
@@ -79,6 +83,12 @@ export const AdminDashboardView: React.FC = () => {
   const [newEditionBudget, setNewEditionBudget] = useState('30');
   const [newEditionCopyMembers, setNewEditionCopyMembers] = useState(true);
   const [createEditionError, setCreateEditionError] = useState<string | null>(null);
+
+  // Modal de Logs de Diagnòstic
+  const [openLogsModal, setOpenLogsModal] = useState(false);
+  const [logs, setLogs] = useState<SystemLogEntry[]>([]);
+  const [isLoadingLogs, setIsLoadingLogs] = useState(false);
+  const [logFilter, setLogFilter] = useState<'ALL' | 'ERROR' | 'WARN' | 'INFO'>('ALL');
 
   const [toastMessage, setToastMessage] = useState<string | null>(null);
 
@@ -234,22 +244,56 @@ export const AdminDashboardView: React.FC = () => {
     });
   };
 
+  const handleOpenLogsModal = () => {
+    setOpenLogsModal(true);
+    fetchLogs();
+  };
+
+  const fetchLogs = async () => {
+    setIsLoadingLogs(true);
+    try {
+      const res = await yuleApi.getSystemLogs();
+      setLogs(res.data.logs || []);
+    } catch {
+      setToastMessage("No s'han pogut carregar els logs del sistema.");
+    } finally {
+      setIsLoadingLogs(false);
+    }
+  };
+
+  const handleCopyLog = (entry: SystemLogEntry) => {
+    const text = JSON.stringify(entry, null, 2);
+    navigator.clipboard.writeText(text);
+    setToastMessage(`Log [${entry.method} ${entry.path}] copiat al porta-retalls! 📋`);
+  };
+
   return (
     <Container maxWidth="lg" sx={{ mt: { xs: 2.5, md: 4 }, mb: 8 }}>
-      <Box sx={{ mb: 3 }}>
-        <Typography
-          variant="h4"
-          sx={{
-            fontFamily: "'Cinzel', serif",
-            color: '#1b4332',
-            fontWeight: 800,
-          }}
+      <Box sx={{ mb: 3, display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: 2 }}>
+        <Box>
+          <Typography
+            variant="h4"
+            sx={{
+              fontFamily: "'Cinzel', serif",
+              color: '#1b4332',
+              fontWeight: 800,
+            }}
+          >
+            PANELL D'ADMINISTRACIÓ
+          </Typography>
+          <Typography color="text.secondary">
+            Estructura del sorteig de la família: paràmetres mestres, assignacions i llistes de desitjos.
+          </Typography>
+        </Box>
+        <Button
+          variant="outlined"
+          color="info"
+          startIcon={<TerminalIcon />}
+          onClick={handleOpenLogsModal}
+          sx={{ fontWeight: 700, borderRadius: 2 }}
         >
-          PANELL D'ADMINISTRACIÓ
-        </Typography>
-        <Typography color="text.secondary">
-          Estructura del sorteig de la família: paràmetres mestres, assignacions i llistes de desitjos.
-        </Typography>
+          Logs del Sistema 📋
+        </Button>
       </Box>
 
       {/* =========================================================================
@@ -823,6 +867,185 @@ export const AdminDashboardView: React.FC = () => {
             </Button>
           </DialogActions>
         </Box>
+      </Dialog>
+
+      {/* =========================================================================
+          MODAL: LOGS DEL SISTEMA (DIAGNÒSTIC)
+          ========================================================================= */}
+      <Dialog
+        open={openLogsModal}
+        onClose={() => setOpenLogsModal(false)}
+        maxWidth="md"
+        fullWidth
+        PaperProps={{ sx: { borderRadius: 3, maxHeight: '85vh' } }}
+      >
+        <DialogTitle sx={{ fontFamily: "'Cinzel', serif", fontWeight: 700, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+            <TerminalIcon sx={{ color: '#1b4332' }} />
+            <span>Logs del Servidor & Diagnòstic</span>
+          </Box>
+          <Box sx={{ display: 'flex', gap: 1 }}>
+            <IconButton size="small" onClick={fetchLogs} disabled={isLoadingLogs} title="Refrescar logs">
+              <RefreshIcon fontSize="small" />
+            </IconButton>
+          </Box>
+        </DialogTitle>
+        <DialogContent dividers sx={{ bgcolor: '#0f172a', color: '#f8fafc', p: 2 }}>
+          {/* Filtres per nivell */}
+          <Box sx={{ display: 'flex', gap: 1, mb: 2, flexWrap: 'wrap', alignItems: 'center' }}>
+            <Typography variant="caption" sx={{ color: '#94a3b8', mr: 1 }}>
+              Filtre:
+            </Typography>
+            {(['ALL', 'ERROR', 'WARN', 'INFO'] as const).map((lvl) => (
+              <Chip
+                key={lvl}
+                label={lvl === 'ALL' ? 'Tots' : lvl}
+                size="small"
+                onClick={() => setLogFilter(lvl)}
+                color={
+                  logFilter === lvl
+                    ? lvl === 'ERROR'
+                      ? 'error'
+                      : lvl === 'WARN'
+                      ? 'warning'
+                      : lvl === 'INFO'
+                      ? 'success'
+                      : 'primary'
+                    : 'default'
+                }
+                variant={logFilter === lvl ? 'filled' : 'outlined'}
+                sx={{
+                  fontWeight: 700,
+                  fontSize: '11px',
+                  color: logFilter === lvl ? undefined : '#cbd5e1',
+                  borderColor: '#334155',
+                }}
+              />
+            ))}
+            <Typography variant="caption" sx={{ color: '#64748b', ml: 'auto' }}>
+              {logs.filter((l) => logFilter === 'ALL' || l.level === logFilter).length} registres
+            </Typography>
+          </Box>
+
+          {isLoadingLogs ? (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <Typography variant="body2" sx={{ color: '#94a3b8' }}>
+                Carregant logs del servidor...
+              </Typography>
+            </Box>
+          ) : logs.filter((l) => logFilter === 'ALL' || l.level === logFilter).length === 0 ? (
+            <Box sx={{ textAlign: 'center', py: 4, color: '#64748b' }}>
+              <Typography variant="body2">No hi ha logs registrats en aquest filtre.</Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1.5, maxHeight: '55vh', overflowY: 'auto' }}>
+              {logs
+                .filter((l) => logFilter === 'ALL' || l.level === logFilter)
+                .map((entry) => {
+                  const isErr = entry.level === 'ERROR' || entry.level === 'PANIC';
+                  const isWarn = entry.level === 'WARN';
+                  const badgeColor = isErr ? '#ef4444' : isWarn ? '#f59e0b' : '#10b981';
+
+                  return (
+                    <Box
+                      key={entry.id}
+                      sx={{
+                        p: 1.5,
+                        borderRadius: 1.5,
+                        bgcolor: '#1e293b',
+                        border: '1px solid',
+                        borderColor: isErr ? '#7f1d1d' : isWarn ? '#78350f' : '#334155',
+                        fontFamily: 'monospace',
+                        fontSize: '12px',
+                      }}
+                    >
+                      <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Box
+                            component="span"
+                            sx={{
+                              px: 0.8,
+                              py: 0.2,
+                              borderRadius: 1,
+                              bgcolor: badgeColor,
+                              color: '#fff',
+                              fontWeight: 700,
+                              fontSize: '10px',
+                            }}
+                          >
+                            {entry.status} {entry.method}
+                          </Box>
+                          <Typography component="span" sx={{ color: '#e2e8f0', fontWeight: 600, fontSize: '12px' }}>
+                            {entry.path}
+                          </Typography>
+                        </Box>
+                        <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                          <Typography component="span" sx={{ color: '#94a3b8', fontSize: '11px' }}>
+                            {entry.latency_ms.toFixed(1)}ms
+                          </Typography>
+                          <IconButton
+                            size="small"
+                            onClick={() => handleCopyLog(entry)}
+                            title="Copiar log JSON"
+                            sx={{ color: '#64748b', p: 0.5, '&:hover': { color: '#e2e8f0' } }}
+                          >
+                            <ContentCopyIcon sx={{ fontSize: 14 }} />
+                          </IconButton>
+                        </Box>
+                      </Box>
+
+                      <Box sx={{ display: 'flex', gap: 2, color: '#64748b', fontSize: '11px', mb: 0.5 }}>
+                        <span>🕒 {new Date(entry.timestamp).toLocaleTimeString('ca-ES')}</span>
+                        <span>IP: {entry.client_ip}</span>
+                        {entry.user_id && <span>User: {entry.user_id.slice(0, 8)}</span>}
+                        <span>ID: {entry.request_id}</span>
+                      </Box>
+
+                      {entry.error_message && (
+                        <Box
+                          sx={{
+                            mt: 1,
+                            p: 1,
+                            borderRadius: 1,
+                            bgcolor: '#3b0d0c',
+                            color: '#fca5a5',
+                            border: '1px solid #7f1d1d',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                          }}
+                        >
+                          ❌ <strong>{entry.error_code || 'ERROR'}:</strong> {entry.error_message}
+                        </Box>
+                      )}
+
+                      {entry.request_body && (
+                        <Box
+                          sx={{
+                            mt: 0.8,
+                            p: 0.8,
+                            borderRadius: 1,
+                            bgcolor: '#0f172a',
+                            color: '#94a3b8',
+                            border: '1px solid #1e293b',
+                            fontSize: '11px',
+                            whiteSpace: 'pre-wrap',
+                            wordBreak: 'break-word',
+                          }}
+                        >
+                          📦 <em>Payload:</em> {entry.request_body}
+                        </Box>
+                      )}
+                    </Box>
+                  );
+                })}
+            </Box>
+          )}
+        </DialogContent>
+        <DialogActions sx={{ p: 2 }}>
+          <Button onClick={() => setOpenLogsModal(false)} variant="contained" sx={{ bgcolor: '#1b4332' }}>
+            Tancar
+          </Button>
+        </DialogActions>
       </Dialog>
 
       <Snackbar
