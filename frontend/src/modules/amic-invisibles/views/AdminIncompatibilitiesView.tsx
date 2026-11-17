@@ -204,8 +204,8 @@ export const AdminIncompatibilitiesView: React.FC = () => {
                   required
                 >
                   {members.map((m) => (
-                    <MenuItem key={m.id} value={m.id}>
-                      {m.name}
+                    <MenuItem key={m.id} value={m.id} sx={{ opacity: m.is_active ? 1 : 0.6 }}>
+                      {m.name} {!m.is_active ? ' (⏸️ Desactivat)' : ''}
                     </MenuItem>
                   ))}
                 </Select>
@@ -222,8 +222,8 @@ export const AdminIncompatibilitiesView: React.FC = () => {
                   {members
                     .filter((m) => m.id !== p1)
                     .map((m) => (
-                      <MenuItem key={m.id} value={m.id}>
-                        {m.name}
+                      <MenuItem key={m.id} value={m.id} sx={{ opacity: m.is_active ? 1 : 0.6 }}>
+                        {m.name} {!m.is_active ? ' (⏸️ Desactivat)' : ''}
                       </MenuItem>
                     ))}
                 </Select>

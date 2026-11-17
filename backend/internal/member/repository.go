@@ -23,10 +23,10 @@ func (r *Repository) ListMembersWithWishlistCount(editionID string) ([]MemberAdm
 			u.email, 
 			u.role, 
 			COALESCE(em.is_active, true) as is_active,
-			(SELECT COUNT(*) FROM wishlist_items w WHERE w.user_id = u.id AND w.edition_id = $1) as wishlist_count,
+			(SELECT COUNT(*) FROM wishlist_items w WHERE w.user_id = u.id AND w.edition_id = $1::uuid) as wishlist_count,
 			u.created_at
 		FROM users u
-		LEFT JOIN edition_members em ON em.user_id = u.id AND em.edition_id = $1
+		LEFT JOIN edition_members em ON em.user_id = u.id AND em.edition_id = $1::uuid
 		ORDER BY u.name ASC
 	`
 

@@ -52,6 +52,7 @@ interface YuleState {
   markItemPurchased: (itemId: string, isPurchased: boolean) => Promise<void>;
   fetchAdminData: () => Promise<void>;
   createMember: (name: string, email: string) => Promise<boolean>;
+  updateMemberStatus: (memberId: string, isActive: boolean) => Promise<boolean>;
   createIncompatibility: (
     p1: string,
     p2: string,
@@ -318,6 +319,22 @@ export const useYuleStore = create<YuleState>((set, get) => ({
       await get().fetchAdminData();
       return true;
     } catch {
+      return false;
+    }
+  },
+
+  updateMemberStatus: async (memberId: string, isActive: boolean) => {
+    try {
+      await yuleApi.updateMember(memberId, { is_active: isActive });
+      await get().fetchAdminData();
+      return true;
+    } catch (err: any) {
+      set({
+        error:
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Error actualitzant l'estat del membre",
+      });
       return false;
     }
   },

@@ -95,7 +95,7 @@ func (r *Repository) GetActiveParticipants(editionID string) ([]draw.Participant
 	query := `
 		SELECT u.id, u.name 
 		FROM users u
-		JOIN edition_members em ON em.user_id = u.id AND em.edition_id = $1
+		JOIN edition_members em ON em.user_id = u.id AND em.edition_id = $1::uuid
 		WHERE em.is_active = true
 	`
 	rows, err := r.db.Query(query, editionID)

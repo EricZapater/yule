@@ -24,6 +24,8 @@ import {
   Divider,
   FormControlLabel,
   Checkbox,
+  Switch,
+  Tooltip,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
@@ -59,6 +61,7 @@ export const AdminDashboardView: React.FC = () => {
     fetchEditions,
     fetchAdminData,
     createMember,
+    updateMemberStatus,
     createEdition,
     updateEdition,
     deleteEdition,
@@ -164,6 +167,19 @@ export const AdminDashboardView: React.FC = () => {
       setToastMessage(`S'ha reenviat el Magic Link per correu a ${name} (${email})!`);
     } catch {
       setToastMessage(`No s'ha pogut reenviar el correu a ${email}.`);
+    }
+  };
+
+  const activeMembers = members.filter((m) => m.is_active);
+
+  const handleToggleActive = async (id: string, name: string, newActive: boolean) => {
+    const ok = await updateMemberStatus(id, newActive);
+    if (ok) {
+      setToastMessage(
+        newActive
+          ? `✅ ${name} s'ha activat per participar al sorteig!`
+          : `⏸️ ${name} s'ha desactivat del sorteig (es manté al cens).`
+      );
     }
   };
 
@@ -517,7 +533,7 @@ export const AdminDashboardView: React.FC = () => {
               fullWidth
               startIcon={<CasinoIcon />}
               onClick={handleTriggerDraw}
-              disabled={isLoading || !viability?.is_viable || members.length < 3}
+              disabled={isLoading || !viability?.is_viable || activeMembers.length < 3}
               sx={{
                 py: 1.8,
                 fontSize: '16px',
@@ -586,17 +602,22 @@ export const AdminDashboardView: React.FC = () => {
               <Grid item xs={6}>
                 <Box sx={{ bgcolor: '#faf7f2', p: 2, borderRadius: 2, textAlign: 'center' }}>
                   <Typography variant="h4" sx={{ fontWeight: 800, color: '#1b4332' }}>
-                    {members.length}
+                    {activeMembers.length}{' '}
+                    <Typography component="span" variant="body1" color="text.secondary">
+                      / {members.length}
+                    </Typography>
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
-                    Familiars censats
+                    Participants actius{' '}
+                    {members.length - activeMembers.length > 0 &&
+                      `(${members.length - activeMembers.length} desactivats)`}
                   </Typography>
                 </Box>
               </Grid>
               <Grid item xs={6}>
                 <Box sx={{ bgcolor: '#faf7f2', p: 2, borderRadius: 2, textAlign: 'center' }}>
                   <Typography variant="h4" sx={{ fontWeight: 800, color: '#2d6a4f' }}>
-                    {members.filter((m) => m.wishlist_items_count > 0).length} / {members.length}
+                    {activeMembers.filter((m) => m.wishlist_items_count > 0).length} / {activeMembers.length}
                   </Typography>
                   <Typography variant="body2" color="text.secondary">
                     Amb llista activa
@@ -647,6 +668,7 @@ export const AdminDashboardView: React.FC = () => {
               <TableRow>
                 <TableCell sx={{ fontWeight: 700 }}>Familiar</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Correu electrònic</TableCell>
+                <TableCell sx={{ fontWeight: 700 }}>Participació al sorteig</TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>Desitjos en aquest sorteig</TableCell>
                 <TableCell sx={{ fontWeight: 700 }} align="right">
                   Accions d'accés
@@ -655,11 +677,64 @@ export const AdminDashboardView: React.FC = () => {
             </TableHead>
             <TableBody>
               {members.map((m) => (
-                <TableRow key={m.id} hover>
+                <TableRow
+                  key={m.id}
+                  hover
+                  sx={{
+                    opacity: m.is_active ? 1 : 0.6,
+                    bgcolor: m.is_active ? 'inherit' : '#fafafa',
+                  }}
+                >
                   <TableCell sx={{ fontWeight: 700 }}>
-                    {m.name} {m.role === 'admin' && '👑'}
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                      <span>{m.name}</span>
+                      {m.role === 'admin' && (
+                        <Chip
+                          label="Admin 👑"
+                          size="small"
+                          sx={{
+                            fontSize: '10px',
+                            height: '18px',
+                            bgcolor: '#fef3c7',
+                            color: '#92400e',
+                            fontWeight: 700,
+                          }}
+                        />
+                      )}
+                      {!m.is_active && (
+                        <Typography component="span" variant="caption" sx={{ color: '#dc2626', fontWeight: 600 }}>
+                          (No participa)
+                        </Typography>
+                      )}
+                    </Box>
                   </TableCell>
                   <TableCell color="text.secondary">{m.email}</TableCell>
+                  <TableCell>
+                    <Tooltip
+                      title={
+                        m.is_active
+                          ? 'Aquest familiar entrarà al sorteig. Clica per desactivar-lo si no vindrà.'
+                          : 'Aquest familiar està desactivat d’aquest sorteig. Clica per reactivar-lo.'
+                      }
+                    >
+                      <Box sx={{ display: 'inline-flex', alignItems: 'center', gap: 1 }}>
+                        <Switch
+                          checked={m.is_active}
+                          onChange={(e) => handleToggleActive(m.id, m.name, e.target.checked)}
+                          color="success"
+                          size="small"
+                        />
+                        <Chip
+                          label={m.is_active ? 'Actiu ✅' : 'Desactivat ⏸️'}
+                          size="small"
+                          color={m.is_active ? 'success' : 'default'}
+                          variant={m.is_active ? 'filled' : 'outlined'}
+                          onClick={() => handleToggleActive(m.id, m.name, !m.is_active)}
+                          sx={{ fontWeight: 700, fontSize: '11px', cursor: 'pointer' }}
+                        />
+                      </Box>
+                    </Tooltip>
+                  </TableCell>
                   <TableCell>
                     {m.wishlist_items_count > 0 ? (
                       <Chip
