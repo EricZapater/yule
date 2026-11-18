@@ -1,0 +1,40 @@
+backend/cmd/api/main.go
+  h_42175f19913982 141-142
+backend/internal/member/handler.go
+  h_42175f19913982 62-92
+backend/internal/member/repository.go
+  h_42175f19913982 99-109
+backend/internal/member/service.go
+  h_42175f19913982 89-101
+contracts/amic-invisible.openapi.yaml
+  h_42175f19913982 324-369
+frontend/package.json
+  h_42175f19913982 27
+frontend/src/modules/amic-invisibles/api.ts
+  h_42175f19913982 86-87
+frontend/src/modules/amic-invisibles/store.ts
+  h_42175f19913982 56-57,344-375
+frontend/src/modules/amic-invisibles/views/AdminDashboardView.tsx
+  h_42175f19913982 42,55,67-68,249-268,782,789,791,799,803-827
+frontend/src/modules/amic-invisibles/views/GuiaView.tsx
+  h_42175f19913982 1-330
+frontend/src/modules/amic-invisibles/views/LoginView.tsx
+  h_42175f19913982 242-284
+frontend/src/router/index.tsx
+  h_42175f19913982 9,24-27
+pnpm-lock.yaml
+  h_42175f19913982 9-10,53-55,636-638,645-647,661-663,684-687,709-712,731-733,738-740,760-762,802-804,814-816,872-875,884-886,910-912,951-953,969-971,990-992,1035-1037,1047-1050,1074-1077,1085-1091,1110-1112,1668-1669,1674-1676,1689-1691,1728-1730,1750-1761,1774-1776,1785-1789,1803-1807,1868-1873,1878-1879,1933-1938,1951-1952,1967-1977,2004-2005,2021-2023,2042-2046,2083-2085,2095-2097,2140-2142,2147-2154,2170-2174
+scripts/generate-pdf.js
+  h_42175f19913982 1-195
+---
+{
+  "schema_version": "authorship/3.0.0",
+  "git_ai_version": "1.7.6",
+  "base_commit_sha": "be44f046547586773259ea569c9789be9efd4a0e",
+  "prompts": {},
+  "humans": {
+    "h_42175f19913982": {
+      "author": "Èric Zapater <ericzm@ext.inditex.com>"
+    }
+  }
+}
