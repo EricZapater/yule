@@ -39,6 +39,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import AttachMoneyIcon from '@mui/icons-material/AttachMoney';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import DeleteIcon from '@mui/icons-material/Delete';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import TerminalIcon from '@mui/icons-material/Terminal';
 import RefreshIcon from '@mui/icons-material/Refresh';
@@ -51,6 +52,7 @@ import { SystemLogEntry } from '../types';
 export const AdminDashboardView: React.FC = () => {
   const navigate = useNavigate();
   const {
+    currentUser,
     currentEdition,
     editions,
     members,
@@ -62,6 +64,8 @@ export const AdminDashboardView: React.FC = () => {
     fetchAdminData,
     createMember,
     updateMemberStatus,
+    deleteMember,
+    clearMemberWishlist,
     createEdition,
     updateEdition,
     deleteEdition,
@@ -239,6 +243,26 @@ export const AdminDashboardView: React.FC = () => {
       setToastMessage(`🗑️ Sorteig "${name}" eliminat correctament.`);
     } else {
       alert("No s'ha pogut eliminar el sorteig.");
+    }
+  };
+
+  const handleDeleteMember = async (id: string, name: string) => {
+    if (!window.confirm(`Segur que vols eliminar definitivament a "${name}" de la família? S'esborraran el seu compte, els seus desitjos i tota la seva participació a la base de dades.`)) return;
+    const ok = await deleteMember(id);
+    if (ok) {
+      setToastMessage(`🗑️ Membre "${name}" eliminat correctament.`);
+    } else {
+      alert("No s'ha pogut eliminar el membre.");
+    }
+  };
+
+  const handleClearMemberWishlist = async (id: string, name: string) => {
+    if (!window.confirm(`Segur que vols buidar tots els desitjos de "${name}" d'aquest sorteig?`)) return;
+    const ok = await clearMemberWishlist(id);
+    if (ok) {
+      setToastMessage(`✨ S'ha buidat la llista de desitjos de "${name}".`);
+    } else {
+      alert("No s'ha pogut buidar la llista de desitjos.");
     }
   };
 
@@ -755,16 +779,16 @@ export const AdminDashboardView: React.FC = () => {
                     )}
                   </TableCell>
                   <TableCell align="right">
-                    <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                    <Box sx={{ display: 'flex', gap: 0.5, justifyContent: 'flex-end', alignItems: 'center' }}>
                       <Button
                         variant="outlined"
                         color="primary"
                         size="small"
                         startIcon={<MailOutlineIcon />}
                         onClick={() => handleResendEmail(m.email, m.name)}
-                        sx={{ fontSize: '12px' }}
+                        sx={{ fontSize: '11px', px: 1 }}
                       >
-                        Reenviar Email
+                        Email
                       </Button>
                       <Button
                         variant="outlined"
@@ -772,10 +796,35 @@ export const AdminDashboardView: React.FC = () => {
                         size="small"
                         startIcon={<WhatsAppIcon />}
                         onClick={() => handleCopyWhatsApp(m.name, m.magic_link_url)}
-                        sx={{ fontSize: '12px' }}
+                        sx={{ fontSize: '11px', px: 1 }}
                       >
                         WhatsApp
                       </Button>
+                      {m.wishlist_items_count > 0 && (
+                        <Tooltip title={`Buidar els ${m.wishlist_items_count} desitjos de ${m.name}`}>
+                          <IconButton
+                            size="small"
+                            color="warning"
+                            onClick={() => handleClearMemberWishlist(m.id, m.name)}
+                            sx={{ border: '1px solid #ed6c02', borderRadius: 1.5, p: 0.5 }}
+                          >
+                            <DeleteSweepIcon fontSize="small" />
+                          </IconButton>
+                        </Tooltip>
+                      )}
+                      <Tooltip title={m.id === currentUser?.id ? "No et pots eliminar a tu mateix" : `Eliminar definitivament a ${m.name}`}>
+                        <span>
+                          <IconButton
+                            size="small"
+                            color="error"
+                            disabled={m.id === currentUser?.id}
+                            onClick={() => handleDeleteMember(m.id, m.name)}
+                            sx={{ border: '1px solid #d32f2f', borderRadius: 1.5, p: 0.5 }}
+                          >
+                            <DeleteIcon fontSize="small" />
+                          </IconButton>
+                        </span>
+                      </Tooltip>
                     </Box>
                   </TableCell>
                 </TableRow>

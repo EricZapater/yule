@@ -138,6 +138,8 @@ func main() {
 				adminGroup.GET("/members", memberHandler.ListMembers)
 				adminGroup.POST("/members", memberHandler.CreateMember)
 				adminGroup.PUT("/members/:id", memberHandler.UpdateMember)
+				adminGroup.DELETE("/members/:id", memberHandler.DeleteMember)
+				adminGroup.DELETE("/members/:id/wishlist", memberHandler.ClearMemberWishlist)
 
 				adminGroup.GET("/incompatibilities", incompHandler.ListIncompatibilities)
 				adminGroup.POST("/incompatibilities", incompHandler.CreateIncompatibility)

@@ -83,6 +83,8 @@ export const yuleApi = {
     id: string,
     data: { name?: string; email?: string; is_active?: boolean }
   ) => apiClient.put(`/members/${id}`, data),
+  deleteMember: (id: string) => apiClient.delete<{ message: string }>(`/members/${id}`),
+  clearMemberWishlist: (id: string) => apiClient.delete<{ message: string }>(`/members/${id}/wishlist`),
 
   // Admin Incompatibilities
   listIncompatibilities: () =>

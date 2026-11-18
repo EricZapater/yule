@@ -53,6 +53,8 @@ interface YuleState {
   fetchAdminData: () => Promise<void>;
   createMember: (name: string, email: string) => Promise<boolean>;
   updateMemberStatus: (memberId: string, isActive: boolean) => Promise<boolean>;
+  deleteMember: (memberId: string) => Promise<boolean>;
+  clearMemberWishlist: (memberId: string) => Promise<boolean>;
   createIncompatibility: (
     p1: string,
     p2: string,
@@ -334,6 +336,38 @@ export const useYuleStore = create<YuleState>((set, get) => ({
           err.response?.data?.error ||
           err.response?.data?.message ||
           "Error actualitzant l'estat del membre",
+      });
+      return false;
+    }
+  },
+
+  deleteMember: async (memberId: string) => {
+    try {
+      await yuleApi.deleteMember(memberId);
+      await get().fetchAdminData();
+      return true;
+    } catch (err: any) {
+      set({
+        error:
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Error eliminant el membre",
+      });
+      return false;
+    }
+  },
+
+  clearMemberWishlist: async (memberId: string) => {
+    try {
+      await yuleApi.clearMemberWishlist(memberId);
+      await get().fetchAdminData();
+      return true;
+    } catch (err: any) {
+      set({
+        error:
+          err.response?.data?.error ||
+          err.response?.data?.message ||
+          "Error buidant la llista de desitjos del membre",
       });
       return false;
     }

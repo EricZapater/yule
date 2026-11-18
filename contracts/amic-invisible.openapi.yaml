@@ -321,6 +321,52 @@ paths:
                 $ref: '#/components/schemas/MemberAdminView'
         '404':
           $ref: '#/components/responses/NotFound'
+    delete:
+      summary: (Admin) Eliminar definitivament un familiar i totes les seves dades
+      operationId: deleteMember
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Familiar eliminat correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /members/{id}/wishlist:
+    delete:
+      summary: (Admin) Buidar tots els desitjos d'un familiar per l'edició actual
+      operationId: clearMemberWishlist
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: string
+            format: uuid
+      responses:
+        '200':
+          description: Desitjos buidats correctament
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
 
   # ---------------------------------------------------------------------------
   # WISHLIST (LLISTA DE DESITJOS)

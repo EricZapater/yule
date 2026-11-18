@@ -86,3 +86,16 @@ func (s *Service) UpdateMember(userID string, input UpdateMemberInput) error {
 
 	return s.repo.UpdateMember(currentEd.ID, userID, input.Name, input.Email, input.IsActive)
 }
+
+func (s *Service) DeleteMember(userID string) error {
+	return s.repo.DeleteUser(userID)
+}
+
+func (s *Service) ClearMemberWishlist(userID string) error {
+	currentEd, err := s.editionService.GetCurrentEdition()
+	if err != nil {
+		return err
+	}
+	return s.repo.ClearMemberWishlist(currentEd.ID, userID)
+}
+

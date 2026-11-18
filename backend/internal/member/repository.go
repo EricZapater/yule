@@ -96,3 +96,14 @@ func (r *Repository) CreateQuickMagicToken(userID string) (string, error) {
 	_, err := r.db.Exec(query, id, userID, token, expiresAt)
 	return token, err
 }
+
+func (r *Repository) DeleteUser(id string) error {
+	_, err := r.db.Exec(`DELETE FROM users WHERE id = $1::uuid`, id)
+	return err
+}
+
+func (r *Repository) ClearMemberWishlist(editionID, userID string) error {
+	_, err := r.db.Exec(`DELETE FROM wishlist_items WHERE edition_id = $1::uuid AND user_id = $2::uuid`, editionID, userID)
+	return err
+}
+

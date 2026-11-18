@@ -239,6 +239,49 @@ export const LoginView: React.FC = () => {
           </Box>
         )}
       </Card>
+
+      {/* Targeta de la Guia Pas a Pas i PDF */}
+      <Card
+        sx={{
+          mt: 3,
+          p: 2.5,
+          textAlign: 'center',
+          bgcolor: '#faf7f2',
+          border: '1px dashed #d4af37',
+          borderRadius: 3,
+        }}
+      >
+        <Typography
+          variant="subtitle2"
+          sx={{ fontWeight: 700, color: '#1b4332', mb: 0.5, fontSize: '14px' }}
+        >
+          📖 Com funciona l'Amic Invisible?
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ display: 'block', mb: 1.5, fontSize: '12.5px' }}>
+          Hem preparat una guia pas a pas amb fotos per resoldre qualsevol dubte sobre el registre, la llista de desitjos i el sorteig.
+        </Typography>
+        <Box sx={{ display: 'flex', gap: 1, justifyContent: 'center', flexWrap: 'wrap' }}>
+          <Button
+            variant="contained"
+            size="small"
+            color="secondary"
+            onClick={() => navigate('/guia')}
+            sx={{ fontWeight: 700, fontSize: '12px', px: 2 }}
+          >
+            Veure Guia Pas a Pas 📱
+          </Button>
+          <Button
+            variant="outlined"
+            size="small"
+            color="primary"
+            href="/guia-familiar.pdf"
+            download="Guia_Familiar_Amic_Invisible_Yule.pdf"
+            sx={{ fontWeight: 600, fontSize: '12px' }}
+          >
+            Descarregar PDF 📄
+          </Button>
+        </Box>
+      </Card>
     </Container>
   );
 };

@@ -6,6 +6,7 @@ import { WishlistView } from '../modules/amic-invisibles/views/WishlistView';
 import { AdminDashboardView } from '../modules/amic-invisibles/views/AdminDashboardView';
 import { AdminIncompatibilitiesView } from '../modules/amic-invisibles/views/AdminIncompatibilitiesView';
 import { LoginView } from '../modules/amic-invisibles/views/LoginView';
+import { GuiaView } from '../modules/amic-invisibles/views/GuiaView';
 
 const RequireAuth: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const token = localStorage.getItem('yule_auth_token');
@@ -19,6 +20,10 @@ export const router = createBrowserRouter([
   {
     path: '/login',
     element: <LoginView />,
+  },
+  {
+    path: '/guia',
+    element: <GuiaView />,
   },
   {
     path: '/',

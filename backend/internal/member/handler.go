@@ -59,3 +59,34 @@ func (h *Handler) UpdateMember(c *gin.Context) {
 
 	shared.RespondMessage(c, http.StatusOK, "Familiar actualitzat correctament")
 }
+
+func (h *Handler) DeleteMember(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		shared.RespondError(c, http.StatusBadRequest, "BAD_REQUEST", "Identificador requerit")
+		return
+	}
+
+	if err := h.service.DeleteMember(id); err != nil {
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error eliminant el familiar: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Familiar eliminat correctament"})
+}
+
+func (h *Handler) ClearMemberWishlist(c *gin.Context) {
+	id := c.Param("id")
+	if id == "" {
+		shared.RespondError(c, http.StatusBadRequest, "BAD_REQUEST", "Identificador requerit")
+		return
+	}
+
+	if err := h.service.ClearMemberWishlist(id); err != nil {
+		shared.RespondError(c, http.StatusInternalServerError, "INTERNAL_ERROR", "Error buidant la llista de desitjos: "+err.Error())
+		return
+	}
+
+	c.JSON(http.StatusOK, gin.H{"message": "Llista de desitjos buidada correctament"})
+}
+
